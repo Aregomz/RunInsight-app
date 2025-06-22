@@ -1,6 +1,7 @@
 // features/auth/presentation/pages/register_page.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:runinsight/core/widgets/gradient_button.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -15,12 +16,13 @@ class _RegisterPageState extends State<RegisterPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
-  final _ageController = TextEditingController();
   final _genderController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _weightController = TextEditingController();
   final _heightController = TextEditingController();
+
+  DateTime? _birthDate;
 
   void _validate() {
     if (_formKey.currentState!.validate()) {
@@ -33,13 +35,27 @@ class _RegisterPageState extends State<RegisterPage> {
     _nameController.dispose();
     _emailController.dispose();
     _usernameController.dispose();
-    _ageController.dispose();
     _genderController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _weightController.dispose();
     _heightController.dispose();
     super.dispose();
+  }
+
+  double get _formProgress {
+    int filled = 0;
+    const total = 9; // Total de campos a considerar
+    if (_nameController.text.isNotEmpty) filled++;
+    if (_emailController.text.isNotEmpty) filled++;
+    if (_usernameController.text.isNotEmpty) filled++;
+    if (_birthDate != null) filled++;
+    if (_genderController.text.isNotEmpty) filled++;
+    if (_passwordController.text.isNotEmpty) filled++;
+    if (_confirmPasswordController.text.isNotEmpty) filled++;
+    if (_weightController.text.isNotEmpty) filled++;
+    if (_heightController.text.isNotEmpty) filled++;
+    return filled / total;
   }
 
   @override
@@ -86,19 +102,33 @@ class _RegisterPageState extends State<RegisterPage> {
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 40),
+                Padding(
+                  padding: const EdgeInsets.only(top: 16, bottom: 24),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: LinearProgressIndicator(
+                      value: _formProgress,
+                      minHeight: 8,
+                      backgroundColor: Colors.white12,
+                      valueColor:
+                          const AlwaysStoppedAnimation<Color>(Color(0xFFFF6A00)),
+                    ),
+                  ),
+                ),
                 _buildTextField(
                     controller: _nameController,
                     hintText: 'Nombre completo',
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Campo requerido' : null),
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Campo requerido'
+                        : null),
                 const SizedBox(height: 16),
                 _buildTextField(
                     controller: _emailController,
                     hintText: 'Correo',
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Campo requerido';
+                      if (value == null || value.isEmpty)
+                        return 'Campo requerido';
                       if (!value.contains('@') || !value.contains('.com')) {
                         return 'Correo inválido';
                       }
@@ -109,26 +139,20 @@ class _RegisterPageState extends State<RegisterPage> {
                     controller: _usernameController,
                     hintText: 'Nombre de usuario',
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Campo requerido';
+                      if (value == null || value.isEmpty)
+                        return 'Campo requerido';
                       if (value.contains(' ')) return 'No puede contener espacios';
                       return null;
                     }),
                 const SizedBox(height: 16),
-                _buildTextField(
-                    controller: _ageController,
-                    hintText: 'Edad',
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Campo requerido';
-                      if (int.tryParse(value) == null) return 'Solo números';
-                      return null;
-                    }),
+                _buildBirthDateField(),
                 const SizedBox(height: 16),
                 _buildTextField(
                     controller: _genderController,
                     hintText: 'Género',
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Campo requerido';
+                      if (value == null || value.isEmpty)
+                        return 'Campo requerido';
                       final g = value.toLowerCase();
                       if (g != 'hombre' &&
                           g != 'mujer' &&
@@ -168,7 +192,8 @@ class _RegisterPageState extends State<RegisterPage> {
                           hintText: 'Peso (kg)',
                           keyboardType: TextInputType.number,
                           validator: (value) {
-                            if (value == null || value.isEmpty) return 'Requerido';
+                            if (value == null || value.isEmpty)
+                              return 'Requerido';
                             if (!RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(value)) {
                               return 'Formato inválido (ej. 70.0)';
                             }
@@ -182,7 +207,8 @@ class _RegisterPageState extends State<RegisterPage> {
                           hintText: 'Altura (cm)',
                           keyboardType: TextInputType.number,
                           validator: (value) {
-                            if (value == null || value.isEmpty) return 'Requerido';
+                            if (value == null || value.isEmpty)
+                              return 'Requerido';
                             if (int.tryParse(value) == null) {
                               return 'Solo números';
                             }
@@ -192,7 +218,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   ],
                 ),
                 const SizedBox(height: 40),
-                _buildGradientButton(onPressed: _validate, text: 'Crear Cuenta'),
+                GradientButton(
+                    onPressed: _validate,
+                    text: 'Crear Cuenta',
+                    width: double.infinity),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => context.pop(),
@@ -235,33 +264,44 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildGradientButton(
-      {required VoidCallback onPressed, required String text}) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFF6A00), Color(0xFFFF3C4A)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(30),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 18),
-            child: Text(
-              text,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+  Widget _buildBirthDateField() {
+    return GestureDetector(
+      onTap: () async {
+        final now = DateTime.now();
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: DateTime(now.year - 18),
+          firstDate: DateTime(1900),
+          lastDate: now,
+          helpText: 'Selecciona tu fecha de nacimiento',
+        );
+        if (picked != null) {
+          setState(() => _birthDate = picked);
+        }
+      },
+      child: AbsorbPointer(
+        child: TextFormField(
+          controller: TextEditingController(
+            text: _birthDate == null
+                ? ''
+                : '${_birthDate!.day.toString().padLeft(2, '0')}/'
+                  '${_birthDate!.month.toString().padLeft(2, '0')}/'
+                  '${_birthDate!.year}',
+          ),
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFF1C1C2E),
+            hintText: 'Fecha de nacimiento',
+            hintStyle: const TextStyle(color: Colors.white54),
+            errorStyle: const TextStyle(color: Colors.redAccent),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15),
+              borderSide: BorderSide.none,
             ),
           ),
+          validator: (_) =>
+              _birthDate == null ? 'Campo requerido' : null,
         ),
       ),
     );

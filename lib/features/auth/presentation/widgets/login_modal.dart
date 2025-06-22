@@ -1,6 +1,7 @@
 // features/auth/presentation/widgets/login_modal.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:runinsight/core/widgets/gradient_button.dart';
 import '../bloc/auth_bloc.dart';
 
 class LoginModal extends StatefulWidget {
@@ -88,7 +89,8 @@ class _LoginModalState extends State<LoginModal>
                                     hintText: 'Contraseña',
                                     obscureText: true),
                                 const SizedBox(height: 30),
-                                _buildGradientButton(
+                                GradientButton(
+                                  width: double.infinity,
                                   onPressed: state is AuthLoading
                                       ? () {}
                                       : () => context.read<AuthBloc>().add(
@@ -139,48 +141,6 @@ class _LoginModalState extends State<LoginModal>
         ),
       ),
       style: const TextStyle(color: Colors.white),
-    );
-  }
-
-  Widget _buildGradientButton(
-      {required VoidCallback onPressed, required String text}) {
-    return SizedBox(
-      width: double.infinity,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30),
-          gradient: const LinearGradient(
-            colors: [Color(0xFFFF6A00), Color(0xFFFF3C4A)],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFFF4B2B).withOpacity(0.4),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            )
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onPressed,
-            borderRadius: BorderRadius.circular(30),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              child: Text(
-                text,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

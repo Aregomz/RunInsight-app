@@ -1,6 +1,7 @@
 // features/auth/presentation/pages/welcome_page.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:runinsight/core/widgets/gradient_button.dart';
 import '../widgets/login_modal.dart';
 
 class WelcomePage extends StatefulWidget {
@@ -93,9 +94,11 @@ Widget build(BuildContext context) {
                     style: TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                   const SizedBox(height: 80),
-                  _buildGradientButton(
+                  GradientButton(
                     onPressed: _showLogin,
                     text: 'Iniciar Sesión',
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 100, vertical: 18),
                   ),
                   const SizedBox(height: 20),
                   OutlinedButton(
@@ -119,45 +122,6 @@ Widget build(BuildContext context) {
         ],
       ),
     ),
-    );
-  }
-
-  Widget _buildGradientButton(
-      {required VoidCallback onPressed, required String text}) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFF6A00), Color(0xFFFF3C4A)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFF4B2B).withOpacity(0.4),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          )
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(30),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 18),
-            child: Text(
-              text,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
