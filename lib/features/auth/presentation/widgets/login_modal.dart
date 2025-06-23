@@ -1,8 +1,9 @@
 // features/auth/presentation/widgets/login_modal.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:runinsight/core/widgets/gradient_button.dart';
+import 'package:runinsight/features/auth/presentation/widgets/gradient_button.dart';
 import '../bloc/auth_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginModal extends StatefulWidget {
   final VoidCallback onClose;
@@ -64,7 +65,10 @@ class _LoginModalState extends State<LoginModal>
                         ),
                         child: BlocConsumer<AuthBloc, AuthState>(
                           listener: (context, state) {
-                            if (state is AuthSuccess) widget.onClose();
+                            if (state is AuthSuccess) {
+                              widget.onClose();
+                              context.go('/home');
+                            }
                             if (state is AuthFailure) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text(state.message)),

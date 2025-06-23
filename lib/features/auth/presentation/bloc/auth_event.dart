@@ -1,4 +1,4 @@
-// features/auth/presentation/cubit/auth_event.dart
+// features/auth/presentation/bloc/auth_event.dart
 part of 'auth_bloc.dart';
 
 abstract class AuthEvent extends Equatable {
@@ -42,3 +42,5 @@ class RegisterRequested extends AuthEvent {
   @override
   List<Object> get props => [name, email, username, age, gender, password, weight, height];
 }
+
+

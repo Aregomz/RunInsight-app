@@ -1,7 +1,7 @@
 // features/auth/presentation/pages/welcome_page.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:runinsight/core/widgets/gradient_button.dart';
+import 'package:runinsight/features/auth/presentation/widgets/gradient_button.dart';
 import '../widgets/login_modal.dart';
 
 class WelcomePage extends StatefulWidget {

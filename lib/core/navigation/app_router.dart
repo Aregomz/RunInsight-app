@@ -1,7 +1,9 @@
-// core/navigation/app_router.dart
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:runinsight/core/widgets/app_shell.dart';
 import 'package:runinsight/features/auth/presentation/pages/register_page.dart';
 import 'package:runinsight/features/auth/presentation/pages/welcome_page.dart';
+import 'package:runinsight/features/home/presentation/pages/home_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -14,6 +16,16 @@ class AppRouter {
       GoRoute(
         path: '/register',
         builder: (_, __) => const RegisterPage(),
+      ),
+      ShellRoute(
+        builder: (_, __, child) => AppShell(child: child),
+        routes: [
+          GoRoute(
+            path: '/home',
+            builder: (_, __) => const HomePage(),
+          ),
+          // futuras rutas: /coach, /profile, /social, etc.
+        ],
       ),
     ],
   );
