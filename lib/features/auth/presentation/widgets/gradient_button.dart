@@ -7,12 +7,14 @@ class GradientButton extends StatelessWidget {
     required this.text,
     this.width,
     this.padding = const EdgeInsets.symmetric(vertical: 18),
+    this.colors = const [Color(0xFFFF6A00), Color(0xFFFF3C4A)],
   });
 
   final VoidCallback onPressed;
   final String text;
   final double? width;
   final EdgeInsets padding;
+  final List<Color> colors;
 
   @override
   Widget build(BuildContext context) {
@@ -20,15 +22,15 @@ class GradientButton extends StatelessWidget {
       width: width,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFF6A00), Color(0xFFFF3C4A)],
+        gradient: LinearGradient(
+          colors: colors,
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF6A00).withOpacity(0.4),
-            blurRadius: 10,
+            color: colors.first.withOpacity(0.4),
+            blurRadius: 5,
             offset: const Offset(0, 5),
           )
         ],

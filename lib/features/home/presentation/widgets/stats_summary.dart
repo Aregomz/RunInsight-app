@@ -20,6 +20,10 @@ class StatsSummary extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF181B23),
               borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: Colors.grey[600]!,
+                width: 1,
+              ),
             ),
             child: Column(
               children: [
@@ -27,7 +31,7 @@ class StatsSummary extends StatelessWidget {
                   weeklyKm.toString(),
                   style: const TextStyle(
                     color: Color(0xFFFF6A00),
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w900,
                     fontSize: 28,
                   ),
                 ),
@@ -47,6 +51,10 @@ class StatsSummary extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF181B23),
               borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: Colors.grey[600]!,
+                width: 1,
+              ),
             ),
             child: Column(
               children: [

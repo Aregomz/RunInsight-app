@@ -26,6 +26,26 @@ class _RegisterPageState extends State<RegisterPage> {
 
   DateTime? _birthDate;
 
+  @override
+  void initState() {
+    super.initState();
+    // Agregar listeners a todos los controladores
+    _nameController.addListener(_updateProgress);
+    _emailController.addListener(_updateProgress);
+    _usernameController.addListener(_updateProgress);
+    _genderController.addListener(_updateProgress);
+    _passwordController.addListener(_updateProgress);
+    _confirmPasswordController.addListener(_updateProgress);
+    _weightController.addListener(_updateProgress);
+    _heightController.addListener(_updateProgress);
+  }
+
+  void _updateProgress() {
+    setState(() {
+      // Esto forzará la reconstrucción del widget y actualizará la barra de progreso
+    });
+  }
+
   void _validate() {
     if (_formKey.currentState!.validate()) {
       final age = _birthDate != null
@@ -132,7 +152,116 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                 ),
-                // Resto de los campos permanece igual...
+                _buildTextField(
+                    controller: _nameController,
+                    hintText: 'Nombre completo',
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Campo requerido'
+                        : null),
+                const SizedBox(height: 16),
+                _buildTextField(
+                    controller: _emailController,
+                    hintText: 'Correo',
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Campo requerido';
+                      }
+                      if (!value.contains('@') || !value.contains('.com')) {
+                        return 'Correo inválido';
+                      }
+                      return null;
+                    }),
+                const SizedBox(height: 16),
+                _buildTextField(
+                    controller: _usernameController,
+                    hintText: 'Nombre de usuario',
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Campo requerido';
+                      }
+                      if (value.contains(' ')) {
+                        return 'No puede contener espacios';
+                      }
+                      return null;
+                    }),
+                const SizedBox(height: 16),
+                _buildBirthDateField(),
+                const SizedBox(height: 16),
+                _buildTextField(
+                    controller: _genderController,
+                    hintText: 'Género',
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Campo requerido';
+                      }
+                      final g = value.toLowerCase();
+                      if (g != 'hombre' &&
+                          g != 'mujer' &&
+                          g != 'prefiero no responder') {
+                        return 'Debe ser: hombre, mujer o prefiero no responder';
+                      }
+                      return null;
+                    }),
+                const SizedBox(height: 16),
+                _buildTextField(
+                    controller: _passwordController,
+                    hintText: 'Contraseña',
+                    obscureText: true,
+                    validator: (value) {
+                      if (value == null || value.length < 6) {
+                        return 'Mínimo 6 caracteres';
+                      }
+                      return null;
+                    }),
+                const SizedBox(height: 16),
+                _buildTextField(
+                    controller: _confirmPasswordController,
+                    hintText: 'Confirmar contraseña',
+                    obscureText: true,
+                    validator: (value) {
+                      if (value != _passwordController.text) {
+                        return 'No coinciden';
+                      }
+                      return null;
+                    }),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTextField(
+                          controller: _weightController,
+                          hintText: 'Peso (kg)',
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Requerido';
+                            }
+                            if (!RegExp(r'^\d+(\.\d{1,2})?$')
+                                .hasMatch(value)) {
+                              return 'Formato inválido (ej. 70.0)';
+                            }
+                            return null;
+                          }),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildTextField(
+                          controller: _heightController,
+                          hintText: 'Altura (cm)',
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Requerido';
+                            }
+                            if (int.tryParse(value) == null) {
+                              return 'Solo números';
+                            }
+                            return null;
+                          }),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 40),
                 GradientButton(
                     onPressed: _validate,
@@ -192,7 +321,10 @@ class _RegisterPageState extends State<RegisterPage> {
           helpText: 'Selecciona tu fecha de nacimiento',
         );
         if (picked != null) {
-          setState(() => _birthDate = picked);
+          setState(() {
+            _birthDate = picked;
+            _updateProgress(); // Actualizar progreso cuando se selecciona fecha
+          });
         }
       },
       child: AbsorbPointer(

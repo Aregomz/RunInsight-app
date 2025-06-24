@@ -15,29 +15,35 @@ class BadgeSummary extends StatelessWidget {
         border: Border.all(color: Colors.white24),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'Insignias totales',
-            style: TextStyle(
-              color: Colors.white70,
-              fontWeight: FontWeight.w500,
-              fontSize: 16,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Insignias totales',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '$totalInsignias Insignias',
+                  style: const TextStyle(
+                    color: Color.fromARGB(255, 249, 230, 59),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                  ),
+                ),
+              ],
             ),
           ),
-          Row(
-            children: [
-              Text(
-                '$totalInsignias Insignias',
-                style: const TextStyle(
-                  color: Color(0xFFFF6A00),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(width: 6),
-              const Text('🔥', style: TextStyle(fontSize: 18)),
-            ],
+          const Icon(
+            Icons.emoji_events,
+            color: Color(0xFFFFD700), // Color dorado para la medalla
+            size: 54, // Trofeo más grande
           ),
         ],
       ),

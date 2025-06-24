@@ -70,6 +70,10 @@ class WeatherInfoWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1B2565),
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFF1E3A8A),
+          width: 2,
+        ),
       ),
       child: Row(
         children: [

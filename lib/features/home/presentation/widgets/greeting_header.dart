@@ -18,8 +18,8 @@ class GreetingHeader extends StatelessWidget {
             'Hola,',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w600,
+              fontSize: 42,
+              fontWeight: FontWeight.w900,
             ),
           ),
           Row(
@@ -28,7 +28,7 @@ class GreetingHeader extends StatelessWidget {
                 username,
                 style: const TextStyle(
                   color: Color(0xFFFF6A00),
-                  fontSize: 28,
+                  fontSize: 42,
                   fontWeight: FontWeight.bold,
                 ),
               ),

@@ -1,6 +1,7 @@
 // features/home/presentation/pages/home_page.dart
 import 'package:flutter/material.dart';
 import 'package:runinsight/features/home/presentation/widgets/badge_summary.dart';
+import 'package:runinsight/features/home/presentation/widgets/calendar_widget.dart';
 import 'package:runinsight/features/home/presentation/widgets/greeting_header.dart';
 import 'package:runinsight/features/home/presentation/widgets/ia_coach_button.dart';
 import 'package:runinsight/features/home/presentation/widgets/stats_summary.dart';
@@ -30,6 +31,8 @@ class HomePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
+              CalendarWidget(),
+              SizedBox(height: 16),
               GreetingHeader(username: 'Antonio'), // simulado por ahora
               SizedBox(height: 16),
               BadgeSummary(totalInsignias: 12),
