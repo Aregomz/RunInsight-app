@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:runinsight/core/widgets/app_shell.dart';
+import 'package:runinsight/commons/widgets/app_shell.dart';
 import 'package:runinsight/features/auth/presentation/pages/register_page.dart';
 import 'package:runinsight/features/auth/presentation/pages/welcome_page.dart';
 import 'package:runinsight/features/home/presentation/pages/home_page.dart';

@@ -28,6 +28,11 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        
+        // Optimizaciones de rendimiento
+        multiDexEnabled = true
+        renderscriptTargetApi = 21
+        renderscriptSupportModeEnabled = true
     }
 
     buildTypes {
@@ -35,7 +40,25 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            
+            // Optimizaciones para release
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+        
+        debug {
+            // Optimizaciones para debug
+            isDebuggable = true
+            isJniDebuggable = false
+            isRenderscriptDebuggable = false
+        }
+    }
+    
+    // Optimizaciones de compilación
+    dexOptions {
+        javaMaxHeapSize = "4g"
+        preDexLibraries = false
     }
 }
 

@@ -22,25 +22,7 @@ class AppShell extends StatelessWidget {
       body: child,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentIndex,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go('/ranking');
-              break;
-            case 1:
-              context.go('/coach');
-              break;
-            case 2:
-              context.go('/home');
-              break;
-            case 3:
-              context.go('/stats');
-              break;
-            case 4:
-              context.go('/profile');
-              break;
-          }
-        },
+        onTap: (index) => _navigateToRoute(context, index),
         selectedItemColor: Colors.orangeAccent,
         unselectedItemColor: Colors.white70,
         backgroundColor: const Color(0xFF0C0C27),
@@ -54,5 +36,12 @@ class AppShell extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _navigateToRoute(BuildContext context, int index) {
+    final routes = ['/ranking', '/coach', '/home', '/stats', '/profile'];
+    if (index >= 0 && index < routes.length) {
+      context.go(routes[index]);
+    }
   }
 }
