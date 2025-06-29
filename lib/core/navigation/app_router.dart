@@ -5,6 +5,7 @@ import 'package:runinsight/features/auth/presentation/pages/register_page.dart';
 import 'package:runinsight/features/auth/presentation/pages/welcome_page.dart';
 import 'package:runinsight/features/home/presentation/pages/home_page.dart';
 import 'package:runinsight/features/profile/presentation/pages/profile_page.dart';
+import 'package:runinsight/features/ranking/presentation/pages/ranking_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -28,6 +29,10 @@ class AppRouter {
           GoRoute(
             path: '/profile',
             builder: (_, __) => const ProfilePage(),
+          ),
+           GoRoute(
+            path: '/ranking',
+            builder: (_, __) => const RankingPage(),
           ),
           // futuras rutas: /coach, /social, etc.
         ],
