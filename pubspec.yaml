@@ -41,6 +41,7 @@ dependencies:
   flutter_launcher_icons: ^0.14.4
   screenshot: any
   share_plus: any
+  intl: any
 
 dev_dependencies:
   flutter_test:
