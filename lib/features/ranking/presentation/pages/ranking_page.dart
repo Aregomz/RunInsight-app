@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import '../widgets/ranking_item.dart';
 import '../widgets/user_ranking_position.dart';
 import '../widgets/share_button.dart';
+import 'package:go_router/go_router.dart';
 
 class RankingUser {
   final String name;
@@ -74,6 +75,16 @@ class _RankingPageState extends State<RankingPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (GoRouter.of(context).canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          },
+        ),
         title: const Text('Ranking de amigos', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),

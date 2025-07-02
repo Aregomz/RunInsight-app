@@ -1,6 +1,7 @@
 // features/trainings/presentation/widgets/training_details_modal.dart
 import 'package:flutter/material.dart';
 import 'package:runinsight/features/trainings/domain/entities/training_entity.dart';
+import 'package:go_router/go_router.dart';
 
 class TrainingDetailsModal extends StatelessWidget {
   final TrainingEntity training;
@@ -29,7 +30,13 @@ class TrainingDetailsModal extends StatelessWidget {
             Align(
               alignment: Alignment.center,
               child: ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () {
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  } else {
+                    GoRouter.of(context).go('/home');
+                  }
+                },
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6A00)),
                 child: const Text('Cerrar', style: TextStyle(color: Colors.white)),
               ),

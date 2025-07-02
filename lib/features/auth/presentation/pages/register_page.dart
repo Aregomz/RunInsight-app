@@ -104,7 +104,13 @@ class _RegisterPageState extends State<RegisterPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (GoRouter.of(context).canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          },
         ),
       ),
       body: Container(
@@ -269,9 +275,14 @@ class _RegisterPageState extends State<RegisterPage> {
                     width: double.infinity),
                 const SizedBox(height: 16),
                 TextButton(
-                  onPressed: () => context.pop(),
-                  child: const Text('Volver',
-                      style: TextStyle(color: Colors.white70)),
+                  onPressed: () {
+                    if (GoRouter.of(context).canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/home');
+                    }
+                  },
+                  child: const Text('Volver', style: TextStyle(color: Colors.white70)),
                 ),
                 const SizedBox(height: 20),
               ],

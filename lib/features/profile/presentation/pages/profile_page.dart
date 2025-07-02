@@ -8,6 +8,7 @@ import 'package:runinsight/features/profile/domain/entities/user_profile_entity.
 import 'package:runinsight/features/profile/domain/usecases/get_user_profile.dart';
 import 'package:runinsight/features/profile/domain/usecases/update_user_profile.dart';
 import 'package:runinsight/features/profile/domain/repositories/profile_repository.dart';
+import 'package:go_router/go_router.dart';
 
 
 // Dummy implementation para desarrollo
@@ -151,7 +152,13 @@ class ProfilePage extends StatelessWidget {
                   backgroundColor: const Color(0xFF0A0A20),
                   leading: IconButton(
                     icon: const Icon(Icons.arrow_back),
-                    onPressed: () => context.read<ProfileBloc>().add(EditProfileToggled()),
+                    onPressed: () {
+                      if (GoRouter.of(context).canPop()) {
+                        context.pop();
+                      } else {
+                        context.go('/home');
+                      }
+                    },
                   ),
                 ),
                 backgroundColor: const Color(0xFF0C0C27),

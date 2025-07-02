@@ -34,13 +34,14 @@ dependencies:
   go_router: ^13.0.1
   google_fonts: ^6.1.0
   equatable: ^2.0.5
+  image_picker: ^1.0.7
+  share_plus: ^7.2.1
+  screenshot: ^3.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   flutter_launcher_icons: ^0.14.4
-  screenshot: any
-  share_plus: any
   intl: any
 
 dev_dependencies:

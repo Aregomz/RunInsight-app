@@ -6,6 +6,7 @@ import 'package:runinsight/features/trainings/presentation/widgets/trainings_lis
 import 'package:runinsight/features/trainings/domain/usecases/get_trainings.dart';
 import 'package:runinsight/features/trainings/domain/entities/training_entity.dart';
 import 'package:runinsight/features/trainings/domain/repositories/trainings_repository.dart';
+import 'package:go_router/go_router.dart';
 
 class DummyTrainingsRepository implements TrainingRepository {
   @override
@@ -37,6 +38,16 @@ class TrainingsPage extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Entrenamientos'),
           backgroundColor: const Color(0xFF0C0C27),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              if (GoRouter.of(context).canPop()) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
+            },
+          ),
         ),
         backgroundColor: const Color(0xFF0C0C27),
         body: const Padding(
