@@ -16,6 +16,7 @@ import 'package:runinsight/features/active_training/domain/usecases/finish_train
 import 'package:runinsight/features/active_training/domain/usecases/get_training_summary.dart';
 import 'package:runinsight/features/active_training/domain/repositories/active_training_repository.dart';
 import 'package:runinsight/features/active_training/domain/entities/active_training_session.dart';
+import 'package:runinsight/features/chat_box/presentation/pages/chat_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -59,6 +60,10 @@ class AppRouter {
               ),
               child: const TrainingInProgressPage(),
             ),
+          ),
+          GoRoute(
+            path: '/chat',
+            builder: (_, __) => const ChatScreen(),
           ),
           // futuras rutas: /coach, /social, etc.
         ],

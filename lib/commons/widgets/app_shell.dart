@@ -11,7 +11,7 @@ class AppShell extends StatelessWidget {
 
     int currentIndex = switch (location) {
       final path when path.startsWith('/ranking') => 0,
-      final path when path.startsWith('/coach') => 1,
+      final path when path.startsWith('/chat') => 1,
       final path when path.startsWith('/home') => 2,
       final path when path.startsWith('/trainings') => 3,
       final path when path.startsWith('/profile') => 4,
@@ -39,7 +39,7 @@ class AppShell extends StatelessWidget {
   }
 
   void _navigateToRoute(BuildContext context, int index) {
-    final routes = ['/ranking', '/coach', '/home', '/trainings', '/profile'];
+    final routes = ['/ranking', '/chat', '/home', '/trainings', '/profile'];
     if (index >= 0 && index < routes.length) {
       context.go(routes[index]);
     }
