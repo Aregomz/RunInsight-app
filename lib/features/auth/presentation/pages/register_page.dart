@@ -19,12 +19,30 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
   final _genderController = TextEditingController();
+  final _experienceController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _weightController = TextEditingController();
   final _heightController = TextEditingController();
 
   DateTime? _birthDate;
+
+  // Listas para los dropdowns
+  final List<Map<String, dynamic>> _experienceLevels = [
+    {'id': 1, 'name': 'Principiante'},
+    {'id': 2, 'name': 'Intermedio'},
+    {'id': 3, 'name': 'Avanzado'},
+    {'id': 4, 'name': 'Experto'},
+    {'id': 5, 'name': 'Maestro'},
+  ];
+
+  final List<Map<String, dynamic>> _genderOptions = [
+    {'id': 1, 'gender': 'Masculino'},
+    {'id': 2, 'gender': 'Femenino'},
+    {'id': 3, 'gender': 'No binario'},
+    {'id': 4, 'gender': 'Otro'},
+    {'id': 5, 'gender': 'Prefiero no decirlo'},
+  ];
 
   @override
   void initState() {
@@ -34,6 +52,7 @@ class _RegisterPageState extends State<RegisterPage> {
     _emailController.addListener(_updateProgress);
     _usernameController.addListener(_updateProgress);
     _genderController.addListener(_updateProgress);
+    _experienceController.addListener(_updateProgress);
     _passwordController.addListener(_updateProgress);
     _confirmPasswordController.addListener(_updateProgress);
     _weightController.addListener(_updateProgress);
@@ -73,6 +92,7 @@ class _RegisterPageState extends State<RegisterPage> {
     _emailController.dispose();
     _usernameController.dispose();
     _genderController.dispose();
+    _experienceController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _weightController.dispose();
@@ -82,12 +102,13 @@ class _RegisterPageState extends State<RegisterPage> {
 
   double get _formProgress {
     int filled = 0;
-    const total = 9;
+    const total = 10; // Aumentado a 10 para incluir experiencia
     if (_nameController.text.isNotEmpty) filled++;
     if (_emailController.text.isNotEmpty) filled++;
     if (_usernameController.text.isNotEmpty) filled++;
     if (_birthDate != null) filled++;
     if (_genderController.text.isNotEmpty) filled++;
+    if (_experienceController.text.isNotEmpty) filled++;
     if (_passwordController.text.isNotEmpty) filled++;
     if (_confirmPasswordController.text.isNotEmpty) filled++;
     if (_weightController.text.isNotEmpty) filled++;
@@ -194,21 +215,33 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 16),
                 _buildBirthDateField(),
                 const SizedBox(height: 16),
-                _buildTextField(
-                    controller: _genderController,
-                    hintText: 'Género',
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Campo requerido';
-                      }
-                      final g = value.toLowerCase();
-                      if (g != 'hombre' &&
-                          g != 'mujer' &&
-                          g != 'prefiero no responder') {
-                        return 'Debe ser: hombre, mujer o prefiero no responder';
-                      }
-                      return null;
-                    }),
+                _buildDropdownField(
+                  controller: _genderController,
+                  hintText: 'Selecciona con el que te identificas',
+                  items: _genderOptions.map((option) => 
+                    DropdownMenuItem<String>(value: option['gender'].toString(), child: Text(option['gender']))
+                  ).toList(),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Campo requerido';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildDropdownField(
+                  controller: _experienceController,
+                  hintText: 'Nivel de experiencia',
+                  items: _experienceLevels.map((option) => 
+                    DropdownMenuItem<String>(value: option['name'].toString(), child: Text(option['name']))
+                  ).toList(),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Campo requerido';
+                    }
+                    return null;
+                  },
+                ),
                 const SizedBox(height: 16),
                 _buildTextField(
                     controller: _passwordController,
@@ -361,6 +394,39 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
           validator: (_) =>
               _birthDate == null ? 'Campo requerido' : null,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdownField({
+    required TextEditingController controller,
+    required String hintText,
+    required List<DropdownMenuItem<String>> items,
+    String? Function(String?)? validator,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: controller.text.isEmpty ? null : controller.text,
+      items: items,
+      onChanged: (value) {
+        setState(() {
+          controller.text = value ?? '';
+          _updateProgress();
+        });
+      },
+      validator: validator,
+      dropdownColor: const Color(0xFF1C1C2E),
+      style: const TextStyle(color: Colors.white),
+      icon: const Icon(Icons.arrow_drop_down, color: Colors.white54),
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: const Color(0xFF1C1C2E),
+        hintText: hintText,
+        hintStyle: const TextStyle(color: Colors.white54),
+        errorStyle: const TextStyle(color: Colors.redAccent),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide.none,
         ),
       ),
     );

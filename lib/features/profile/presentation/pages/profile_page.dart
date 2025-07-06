@@ -125,7 +125,10 @@ class ProfilePage extends StatelessWidget {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                // Cerrar sesión - navegar a la página de bienvenida
+                                context.go('/');
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color.fromARGB(255, 105, 2, 2),
                                 foregroundColor: Colors.white,
