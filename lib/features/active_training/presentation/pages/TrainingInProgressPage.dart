@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/active_training_bloc.dart';
 import '../widgets/TrainingMetricsCard.dart';
 import '../widgets/finish_training_button.dart';
-import 'package:runinsight/features/ranking/presentation/widgets/share_button.dart';
 import '../widgets/share_training_button.dart';
 
 class TrainingInProgressPage extends StatelessWidget {
@@ -53,7 +52,9 @@ class TrainingInProgressPage extends StatelessWidget {
                     const Spacer(),
                     FinishTrainingButton(
                       onPressed: () {
-                        context.read<ActiveTrainingBloc>().add(FinishTrainingRequested());
+                        context.read<ActiveTrainingBloc>().add(
+                          FinishTrainingRequested(),
+                        );
                       },
                     ),
                   ],
@@ -127,7 +128,9 @@ class TrainingInProgressPage extends StatelessWidget {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          context.read<ActiveTrainingBloc>().add(StartTrainingRequested());
+                          context.read<ActiveTrainingBloc>().add(
+                            StartTrainingRequested(),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
@@ -138,7 +141,11 @@ class TrainingInProgressPage extends StatelessWidget {
                         ),
                         child: const Text(
                           'Comenzar entrenamiento',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),

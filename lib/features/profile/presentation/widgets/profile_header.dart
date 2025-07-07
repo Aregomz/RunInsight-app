@@ -5,31 +5,36 @@ class ProfileHeader extends StatelessWidget {
   final String name;
   final String email;
 
-  const ProfileHeader({
-    super.key,
-    required this.name,
-    required this.email,
-  });
+  const ProfileHeader({super.key, required this.name, required this.email});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const CircleAvatar(
+        CircleAvatar(
           radius: 40,
-          backgroundImage: AssetImage('assets/images/avatar_placeholder.png'),
+          backgroundColor: const Color(0xFFFF6A00),
+          child: Text(
+            name.isNotEmpty ? name[0].toUpperCase() : 'U',
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
         ),
         const SizedBox(height: 18),
         Text(
           name,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         const SizedBox(height: 4),
-        Text(
-          email,
-          style: const TextStyle(color: Colors.grey),
-        ),
+        Text(email, style: const TextStyle(color: Colors.grey)),
       ],
     );
   }

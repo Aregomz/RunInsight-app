@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
-import 'dart:typed_data';
 import '../widgets/ranking_item.dart';
 import '../widgets/user_ranking_position.dart';
 import '../widgets/share_button.dart';
@@ -43,7 +42,7 @@ class _RankingPageState extends State<RankingPage> {
     );
     if (image != null) {
       await Share.shareXFiles([
-        XFile.fromData(image, mimeType: 'image/png', name: 'ranking.png')
+        XFile.fromData(image, mimeType: 'image/png', name: 'ranking.png'),
       ], text: '¡Mira mi ranking!');
     }
   }
@@ -85,7 +84,10 @@ class _RankingPageState extends State<RankingPage> {
             }
           },
         ),
-        title: const Text('Ranking de amigos', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Ranking de amigos',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -129,9 +131,7 @@ class _RankingPageState extends State<RankingPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              ShareButton(
-                onPressed: () => _shareRanking(users),
-              ),
+              ShareButton(onPressed: () => _shareRanking(users)),
               const SizedBox(height: 16),
             ],
           ),

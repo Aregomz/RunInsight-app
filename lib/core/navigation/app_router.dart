@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runinsight/commons/widgets/app_shell.dart';
 import 'package:runinsight/features/auth/presentation/pages/register_page.dart';
@@ -22,49 +21,41 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/',
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (_, __) => const WelcomePage(),
-      ),
-      GoRoute(
-        path: '/register',
-        builder: (_, __) => const RegisterPage(),
-      ),
+      GoRoute(path: '/', builder: (_, __) => const WelcomePage()),
+      GoRoute(path: '/register', builder: (_, __) => const RegisterPage()),
       ShellRoute(
         builder: (_, __, child) => AppShell(child: child),
         routes: [
+          GoRoute(path: '/home', builder: (_, __) => const HomePage()),
+          GoRoute(path: '/profile', builder: (_, __) => const ProfilePage()),
+          GoRoute(path: '/ranking', builder: (_, __) => const RankingPage()),
           GoRoute(
-            path: '/home',
-            builder: (_, __) => const HomePage(),
-          ),
-          GoRoute(
-            path: '/profile',
-            builder: (_, __) => const ProfilePage(),
-          ),
-           GoRoute(
-            path: '/ranking',
-            builder: (_, __) => const RankingPage(),
-          ),
-           GoRoute(
             path: '/trainings',
             builder: (_, __) => const TrainingsPage(),
           ),
           GoRoute(
             path: '/training_in_progress',
-            builder: (_, __) => BlocProvider(
-              create: (_) => ActiveTrainingBloc(
-                startTraining: StartTraining(_DummyActiveTrainingRepository()),
-                updateTrainingMetrics: UpdateTrainingMetrics(_DummyActiveTrainingRepository()),
-                finishTraining: FinishTraining(_DummyActiveTrainingRepository()),
-                getTrainingSummary: GetTrainingSummary(_DummyActiveTrainingRepository()),
-              ),
-              child: const TrainingInProgressPage(),
-            ),
+            builder:
+                (_, __) => BlocProvider(
+                  create:
+                      (_) => ActiveTrainingBloc(
+                        startTraining: StartTraining(
+                          _DummyActiveTrainingRepository(),
+                        ),
+                        updateTrainingMetrics: UpdateTrainingMetrics(
+                          _DummyActiveTrainingRepository(),
+                        ),
+                        finishTraining: FinishTraining(
+                          _DummyActiveTrainingRepository(),
+                        ),
+                        getTrainingSummary: GetTrainingSummary(
+                          _DummyActiveTrainingRepository(),
+                        ),
+                      ),
+                  child: const TrainingInProgressPage(),
+                ),
           ),
-          GoRoute(
-            path: '/chat',
-            builder: (_, __) => const ChatScreen(),
-          ),
+          GoRoute(path: '/chat', builder: (_, __) => const ChatScreen()),
           // futuras rutas: /coach, /social, etc.
         ],
       ),
@@ -81,7 +72,8 @@ class _DummyActiveTrainingRepository implements ActiveTrainingRepository {
   Future<ActiveTrainingSession?> getActiveTraining() async => null;
 
   @override
-  Future<ActiveTrainingSession> getSummary() async => ActiveTrainingSession.empty();
+  Future<ActiveTrainingSession> getSummary() async =>
+      ActiveTrainingSession.empty();
 
   @override
   Future<void> startTraining() async {}
@@ -90,5 +82,6 @@ class _DummyActiveTrainingRepository implements ActiveTrainingRepository {
   Future<void> updateMetrics(ActiveTrainingSession session) async {}
 
   @override
-  Future<ActiveTrainingSession> endTraining() async => ActiveTrainingSession.empty();
+  Future<ActiveTrainingSession> endTraining() async =>
+      ActiveTrainingSession.empty();
 }
