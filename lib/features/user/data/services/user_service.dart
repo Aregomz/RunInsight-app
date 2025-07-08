@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserService {
   static const String _baseUrl =
@@ -9,10 +10,26 @@ class UserService {
   static String? _authToken;
   static Map<String, dynamic>? _userData;
 
+  // Inicializar el token desde shared_preferences
+  static Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    _authToken = prefs.getString('auth_token');
+    final userDataString = prefs.getString('user_data');
+    if (userDataString != null) {
+      _userData = json.decode(userDataString);
+    }
+  }
+
+  // Obtener el token actual (en memoria)
+  static String? getAuthToken() => _authToken;
+
   // Establecer el token y datos del usuario después del login exitoso
-  static void setAuthToken(String token, Map<String, dynamic> userData) {
+  static Future<void> setAuthToken(String token, Map<String, dynamic> userData) async {
     _authToken = token;
     _userData = userData;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
+    await prefs.setString('user_data', json.encode(userData));
     print('✅ Token guardado: $token');
     print('✅ Datos mínimos guardados: $userData');
     print('🔑 Token disponible para API: $token');
@@ -84,9 +101,12 @@ class UserService {
   }
 
   // Limpiar datos al cerrar sesión
-  static void clearUserData() {
+  static Future<void> clearUserData() async {
     _authToken = null;
     _userData = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('user_data');
     print('✅ Datos del usuario limpiados');
   }
 }

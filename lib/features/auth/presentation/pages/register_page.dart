@@ -135,6 +135,7 @@ class _RegisterPageState extends State<RegisterPage> {
           age: age,
           weight: _weightController.text,
           height: _heightController.text,
+          expLevel: _experienceController.text,
         ),
       );
     }

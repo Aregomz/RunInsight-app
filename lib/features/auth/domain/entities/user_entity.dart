@@ -7,6 +7,7 @@ class UserEntity {
   final String password;
   final double weight;
   final int height;
+  final String expLevel;
 
   const UserEntity({
     required this.name,
@@ -17,5 +18,6 @@ class UserEntity {
     required this.password,
     required this.weight,
     required this.height,
+    required this.expLevel,
   });
 }

@@ -27,6 +27,7 @@ class RegisterRequested extends AuthEvent {
   final String password;
   final String weight;
   final String height;
+  final String expLevel;
 
   const RegisterRequested({
     required this.name,
@@ -37,10 +38,11 @@ class RegisterRequested extends AuthEvent {
     required this.password,
     required this.weight,
     required this.height,
+    required this.expLevel,
   });
 
   @override
-  List<Object> get props => [name, email, username, age, gender, password, weight, height];
+  List<Object> get props => [name, email, username, age, gender, password, weight, height, expLevel];
 }
 
 
