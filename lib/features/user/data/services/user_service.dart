@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/network/api_endpoints.dart';
 
 class UserService {
-  static const String _baseUrl =
-      'https://api-gateway-runinsight-production.up.railway.app';
+  // static const String _baseUrl =
+  //     'https://api-gateway-runinsight-production.up.railway.app';
 
   // Token de autenticación y datos del usuario
   static String? _authToken;
@@ -49,7 +50,7 @@ class UserService {
       print('🔑 Token disponible: $_authToken');
 
       final response = await http.get(
-        Uri.parse('$_baseUrl/users/$userId'),
+        Uri.parse('${ApiEndpoints.baseUrl}/users/$userId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $_authToken',

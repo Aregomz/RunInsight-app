@@ -13,8 +13,8 @@ class CalendarWidget extends StatelessWidget {
     final daysOfWeek = List.generate(7, (index) => startOfWeek.add(Duration(days: index)));
     
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      margin: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: daysOfWeek.asMap().entries.map((entry) {

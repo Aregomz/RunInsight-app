@@ -25,6 +25,12 @@ class ApiEndpoints {
   // Chat endpoints
   static const String chat = '/chat';
   
+  // Weatherbit API
+  static const String weatherbitBaseUrl = 'https://api.weatherbit.io/v2.0';
+  static const String weatherbitApiKey = 'b608d9642fea4d118f5f680968e47e8a';
+  static String weatherbitCurrent(double lat, double lon) =>
+      '$weatherbitBaseUrl/current?lat=$lat&lon=$lon&key=$weatherbitApiKey&lang=es';
+  
   // Helper methods
   static String getFullUrl(String endpoint) => '$baseUrl$endpoint';
 }

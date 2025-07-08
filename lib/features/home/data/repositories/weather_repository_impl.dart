@@ -1,14 +1,14 @@
-import 'dart:convert';
-import 'dart:developer' as developer;
-import 'package:http/http.dart' as http;
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import '../../domain/entities/weather_entity.dart';
 import '../../domain/repositories/weather_repository.dart';
+import '../datasources/weather_remote_datasource.dart';
+import 'dart:developer' as developer;
+import 'package:geocoding/geocoding.dart';
 
 class WeatherRepositoryImpl implements WeatherRepository {
-  static const String _apiKey = 'b608d9642fea4d118f5f680968e47e8a';
-  static const String _baseUrl = 'https://api.weatherbit.io/v2.0';
+  final WeatherRemoteDatasource datasource;
+
+  WeatherRepositoryImpl({WeatherRemoteDatasource? datasource})
+      : datasource = datasource ?? WeatherRemoteDatasource();
 
   @override
   Future<WeatherEntity> getCurrentWeather() async {
@@ -17,18 +17,18 @@ class WeatherRepositoryImpl implements WeatherRepository {
 
       // Obtener ubicación actual del usuario
       developer.log('📍 Obteniendo ubicación actual...');
-      final position = await _getCurrentLocation();
+      final position = await datasource.getCurrentLocation();
       developer.log(
         '📍 Ubicación obtenida: ${position.latitude}, ${position.longitude}',
       );
 
       // Obtener clima desde Weatherbit API
       developer.log('🌐 Conectando con Weatherbit API...');
-      final weatherData = await _fetchWeatherData(
+      final weatherResponse = await datasource.fetchWeatherData(
         position.latitude,
         position.longitude,
       );
-      developer.log('🌐 Datos del clima obtenidos: ${weatherData.toString()}');
+      developer.log('🌐 Datos del clima obtenidos: ${weatherResponse.data.toString()}');
 
       // Obtener nombre de la ciudad
       developer.log('🏙️ Obteniendo nombre de la ciudad...');
@@ -38,13 +38,14 @@ class WeatherRepositoryImpl implements WeatherRepository {
       );
       developer.log('🏙️ Ciudad: $cityName');
 
+      final weatherData = weatherResponse.data[0];
       final weather = WeatherEntity(
         condition: _getWeatherCondition(
-          weatherData['data'][0]['weather']['code'],
+          weatherData.weather.code,
         ),
-        temperature: weatherData['data'][0]['temp'].round(),
+        temperature: weatherData.temp.round(),
         city: cityName,
-        rainProbability: _getRainProbability(weatherData['data'][0]),
+        rainProbability: _getRainProbability(weatherData),
       );
 
       developer.log(
@@ -60,59 +61,6 @@ class WeatherRepositoryImpl implements WeatherRepository {
         city: 'Tu ciudad',
         rainProbability: 20,
       );
-    }
-  }
-
-  Future<Position> _getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      developer.log('❌ Servicios de ubicación deshabilitados');
-      throw Exception('Los servicios de ubicación están deshabilitados');
-    }
-
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      developer.log('🔐 Solicitando permisos de ubicación...');
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        developer.log('❌ Permisos de ubicación denegados');
-        throw Exception('Permisos de ubicación denegados');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      developer.log('❌ Permisos de ubicación permanentemente denegados');
-      throw Exception(
-        'Los permisos de ubicación están permanentemente denegados',
-      );
-    }
-
-    developer.log('✅ Permisos de ubicación concedidos');
-    return await Geolocator.getCurrentPosition();
-  }
-
-  Future<Map<String, dynamic>> _fetchWeatherData(double lat, double lon) async {
-    final url = '$_baseUrl/current?lat=$lat&lon=$lon&key=$_apiKey&lang=es';
-    developer.log('🌐 URL de la API: $url');
-
-    try {
-      final response = await http.get(Uri.parse(url));
-      developer.log('🌐 Código de respuesta: ${response.statusCode}');
-      developer.log('🌐 Respuesta: ${response.body}');
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        developer.log(
-          '❌ Error HTTP: ${response.statusCode} - ${response.body}',
-        );
-        throw Exception(
-          'Error al obtener datos del clima: ${response.statusCode}',
-        );
-      }
-    } catch (e) {
-      developer.log('❌ Error de conexión: $e');
-      throw Exception('Error de conexión: $e');
     }
   }
 
@@ -143,24 +91,24 @@ class WeatherRepositoryImpl implements WeatherRepository {
     return 'Clima perfecto';
   }
 
-  int _getRainProbability(Map<String, dynamic> weatherData) {
+  int _getRainProbability(dynamic weatherData) {
     developer.log('🌧️ Buscando probabilidad de lluvia en: $weatherData');
 
     // Intentar diferentes campos donde puede estar la probabilidad de lluvia
-    if (weatherData['pop'] != null) {
-      final pop = weatherData['pop'];
+    if (weatherData.pop != null) {
+      final pop = weatherData.pop;
       developer.log('🌧️ Probabilidad de lluvia encontrada en pop: $pop');
       return pop is int ? pop : pop.round();
     }
 
-    if (weatherData['precip'] != null) {
-      final precip = weatherData['precip'];
+    if (weatherData.precip != null) {
+      final precip = weatherData.precip;
       developer.log('🌧️ Probabilidad de lluvia encontrada en precip: $precip');
       return precip is int ? precip : precip.round();
     }
 
     // Si no hay datos de probabilidad, calcular basado en el código del clima
-    final weatherCode = weatherData['weather']?['code'];
+    final weatherCode = weatherData.weather.code;
     if (weatherCode != null) {
       final probability = _calculateRainProbabilityFromCode(weatherCode);
       developer.log(
