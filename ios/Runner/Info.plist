@@ -45,5 +45,22 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- URL Schemes para deep links -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>runinsight.invite</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>runinsight</string>
+			</array>
+		</dict>
+	</array>
+	<!-- Universal Links -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:runinsight.app</string>
+	</array>
 </dict>
 </plist>

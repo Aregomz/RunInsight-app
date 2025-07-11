@@ -18,6 +18,8 @@ class ApiEndpoints {
   // Ranking endpoints
   static const String ranking = '/ranking';
   static const String userPosition = '/ranking/position';
+  static const String friendsRanking = '/users/friends';
+  static const String addFriend = '/users/friends';
   
   // Weather endpoints
   static const String weather = '/weather';

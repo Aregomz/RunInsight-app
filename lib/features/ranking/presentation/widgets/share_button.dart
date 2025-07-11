@@ -2,7 +2,15 @@ import 'package:flutter/material.dart';
 
 class ShareButton extends StatelessWidget {
   final VoidCallback onPressed;
-  const ShareButton({super.key, required this.onPressed});
+  final String text;
+  final IconData icon;
+  
+  const ShareButton({
+    super.key, 
+    required this.onPressed,
+    this.text = 'Compartir Mi Ranking',
+    this.icon = Icons.ios_share,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -10,10 +18,10 @@ class ShareButton extends StatelessWidget {
       width: double.infinity,
       child: ElevatedButton.icon(
         onPressed: onPressed,
-        icon: const Icon(Icons.ios_share, color: Colors.white, size: 26),
-        label: const Text(
-          'Compartir Mi Ranking',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        icon: Icon(icon, color: Colors.white, size: 26),
+        label: Text(
+          text,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFF6A00),

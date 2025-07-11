@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runinsight/commons/widgets/app_shell.dart';
 import 'package:runinsight/features/auth/presentation/pages/register_page.dart';
@@ -28,13 +29,47 @@ import 'package:runinsight/features/home/data/repositories/weekly_stats_reposito
 import 'package:runinsight/features/home/data/datasources/weekly_stats_remote_datasource.dart';
 import 'package:runinsight/features/home/domain/usecases/get_weather.dart';
 import 'package:runinsight/features/home/data/repositories/weather_repository_impl.dart';
+import 'package:runinsight/features/ranking/domain/usecases/add_friend.dart';
+import 'package:runinsight/features/ranking/data/repositories/friends_ranking_repository_impl.dart';
+import 'package:runinsight/features/ranking/data/datasources/friends_ranking_remote_datasource.dart';
+import 'package:runinsight/features/user/data/services/user_service.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/',
+    // Configurar para manejar URLs externas (deep links)
+    redirect: (context, state) {
+      // Manejar deep links con scheme personalizado
+      final location = state.uri.toString();
+      if (location.startsWith('runinsight://')) {
+        // Extraer el friendId del deep link
+        final path = location.replaceFirst('runinsight://', '');
+        if (path.startsWith('invite/')) {
+          final friendId = path.replaceFirst('invite/', '');
+          // Procesar la invitación
+          _processInvitationFromDeepLink(context, int.tryParse(friendId) ?? 0);
+          // Redirigir al home
+          return '/home';
+        }
+      }
+      return null;
+    },
     routes: [
       GoRoute(path: '/', builder: (_, __) => const WelcomePage()),
       GoRoute(path: '/register', builder: (_, __) => const RegisterPage()),
+      // Ruta para manejar invitaciones de amigos
+      GoRoute(
+        path: '/invite/:friendId',
+        builder: (context, state) {
+          final friendId = int.tryParse(state.pathParameters['friendId'] ?? '');
+          if (friendId != null) {
+            // Procesar la invitación automáticamente
+            _processInvitation(context, friendId);
+          }
+          // Redirigir al home después de procesar
+          return const WelcomePage();
+        },
+      ),
       ShellRoute(
         builder: (_, __, child) => AppShell(child: child),
         routes: [
@@ -116,4 +151,112 @@ class AppRouter {
       ),
     ],
   );
+
+  // Método para procesar invitaciones desde deep links
+  static void _processInvitationFromDeepLink(BuildContext context, int friendId) async {
+    try {
+      final currentUserId = UserService.getUserId();
+      if (currentUserId == null) {
+        // Si no hay usuario autenticado, mostrar mensaje
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Debes iniciar sesión para agregar amigos'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Evitar agregarse a sí mismo como amigo
+      if (currentUserId == friendId) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No puedes agregarte a ti mismo como amigo'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      final addFriendUseCase = AddFriendUseCase(
+        FriendsRankingRepositoryImpl(
+          remoteDataSource: FriendsRankingRemoteDataSourceImpl(
+            dio: DioClient.instance,
+          ),
+        ),
+      );
+
+      await addFriendUseCase(currentUserId, friendId);
+      
+      // Mostrar mensaje de éxito
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('¡Amigo agregado exitosamente!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      // Mostrar mensaje de error
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al agregar amigo: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Método para procesar invitaciones automáticamente
+  static void _processInvitation(BuildContext context, int friendId) async {
+    try {
+      final currentUserId = UserService.getUserId();
+      if (currentUserId == null) {
+        // Si no hay usuario autenticado, no se puede agregar amigo
+        return;
+      }
+
+      // Evitar agregarse a sí mismo como amigo
+      if (currentUserId == friendId) {
+        return;
+      }
+
+      final addFriendUseCase = AddFriendUseCase(
+        FriendsRankingRepositoryImpl(
+          remoteDataSource: FriendsRankingRemoteDataSourceImpl(
+            dio: DioClient.instance,
+          ),
+        ),
+      );
+
+      await addFriendUseCase(currentUserId, friendId);
+      
+      // Mostrar mensaje de éxito
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('¡Amigo agregado exitosamente!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      // Mostrar mensaje de error
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al agregar amigo: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 }

@@ -118,4 +118,27 @@ class UserService {
     await prefs.remove('user_data');
     print('✅ Datos del usuario limpiados');
   }
+
+  // Generar link de invitación para agregar amigos
+  static String generateInvitationLink() {
+    final userId = getUserId();
+    if (userId == null) {
+      throw Exception('No se puede generar el link: usuario no autenticado');
+    }
+    
+    // Generar un link que incluya el ID del usuario
+    // Este link puede ser compartido para que otros usuarios se agreguen como amigos
+    // Usar scheme personalizado para abrir directamente la app
+    return 'runinsight://invite/$userId';
+  }
+
+
+
+  // Obtener el nombre del usuario actual para mostrar en el link
+  static String? getCurrentUserName() {
+    if (_userData != null && _userData!.containsKey('username')) {
+      return _userData!['username'] as String;
+    }
+    return null;
+  }
 }

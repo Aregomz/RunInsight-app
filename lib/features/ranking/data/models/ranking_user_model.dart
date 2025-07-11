@@ -5,25 +5,27 @@ class RankingUserModel extends RankingUserEntity {
   const RankingUserModel({
     required super.id,
     required super.name,
-    required double totalKm,
+    required super.totalKm,
     required super.trainings,
-  }) : super(totalKm: totalKm);
+  });
 
   factory RankingUserModel.fromJson(Map<String, dynamic> json) {
     return RankingUserModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      totalKm: (json['kilometers'] as num).toDouble(),
-      trainings: json['trainings'] as int,
+      id: json['id'].toString(),
+      name: json['username'] as String,
+      totalKm: (json['stats']['km_total'] as num).toDouble(),
+      trainings: json['stats']['training_counter'] as int,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': name,
-      'kilometers': totalKm,
-      'trainings': trainings,
+      'username': name,
+      'stats': {
+        'km_total': totalKm,
+        'training_counter': trainings,
+      },
     };
   }
 
