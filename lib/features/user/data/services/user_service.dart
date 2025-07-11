@@ -24,6 +24,14 @@ class UserService {
   // Obtener el token actual (en memoria)
   static String? getAuthToken() => _authToken;
 
+  // Obtener el ID del usuario actual
+  static int? getUserId() {
+    if (_userData != null && _userData!.containsKey('id')) {
+      return _userData!['id'] as int;
+    }
+    return null;
+  }
+
   // Establecer el token y datos del usuario después del login exitoso
   static Future<void> setAuthToken(String token, Map<String, dynamic> userData) async {
     _authToken = token;

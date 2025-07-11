@@ -1,28 +1,31 @@
 // features/trainings/presentation/bloc/trainings_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:runinsight/features/trainings/domain/entities/training_entity.dart';
-import 'package:runinsight/features/trainings/domain/usecases/get_trainings.dart';
-
-part 'trainings_event.dart';
-part 'trainings_state.dart';
+import '../../domain/entities/training_entity.dart';
+import '../../domain/usecases/get_user_trainings.dart';
+import 'trainings_event.dart';
+import 'trainings_state.dart';
 
 class TrainingsBloc extends Bloc<TrainingsEvent, TrainingsState> {
-  final GetTrainings getTrainings;
+  final GetUserTrainings getUserTrainings;
 
-  TrainingsBloc({required this.getTrainings}) : super(TrainingsInitial()) {
-    on<LoadTrainings>(_onLoad);
+  TrainingsBloc({required this.getUserTrainings}) : super(TrainingsInitial()) {
+    on<LoadUserTrainings>(_onLoadUserTrainings);
   }
 
-  Future<void> _onLoad(
-    LoadTrainings event,
+  Future<void> _onLoadUserTrainings(
+    LoadUserTrainings event,
     Emitter<TrainingsState> emit,
   ) async {
     emit(TrainingsLoading());
+    
     try {
-      final trainings = await getTrainings();
+      print('🔄 Cargando entrenamientos del usuario ${event.userId}');
+      final trainings = await getUserTrainings(event.userId);
       emit(TrainingsLoaded(trainings: trainings));
-    } catch (_) {
-      emit(TrainingsError('Error al cargar entrenamientos'));
+      print('✅ ${trainings.length} entrenamientos cargados exitosamente');
+    } catch (e) {
+      print('❌ Error al cargar entrenamientos: $e');
+      emit(TrainingsError(message: e.toString()));
     }
   }
 }

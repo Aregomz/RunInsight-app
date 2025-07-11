@@ -17,6 +17,11 @@ import 'package:runinsight/features/active_training/data/repositories/active_tra
 import 'package:runinsight/features/active_training/data/datasources/active_training_remote_datasource.dart';
 import 'package:runinsight/features/active_training/data/services/training_data_service.dart';
 import 'package:runinsight/features/chat_box/presentation/pages/chat_screen.dart';
+import 'package:runinsight/features/trainings/presentation/bloc/trainings_bloc.dart';
+import 'package:runinsight/features/trainings/domain/usecases/get_user_trainings.dart';
+import 'package:runinsight/features/trainings/data/repositories/trainings_repository_impl.dart';
+import 'package:runinsight/features/trainings/data/datasources/trainings_remote_datasource.dart';
+import 'package:runinsight/core/network/dio_client.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -32,7 +37,18 @@ class AppRouter {
           GoRoute(path: '/ranking', builder: (_, __) => const RankingPage()),
           GoRoute(
             path: '/trainings',
-            builder: (_, __) => const TrainingsPage(),
+            builder: (_, __) => BlocProvider(
+              create: (_) => TrainingsBloc(
+                getUserTrainings: GetUserTrainings(
+                  TrainingsRepositoryImpl(
+                    remoteDataSource: TrainingsRemoteDataSourceImpl(
+                      dio: DioClient.instance,
+                    ),
+                  ),
+                ),
+              ),
+              child: const TrainingsPage(),
+            ),
           ),
           GoRoute(
             path: '/training_in_progress',

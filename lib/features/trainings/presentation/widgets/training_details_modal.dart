@@ -20,12 +20,15 @@ class TrainingDetailsModal extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildRow('Fecha:', training.date.toString().split(' ')[0]),
-            _buildRow('Distancia:', '${training.kilometers.toStringAsFixed(2)} km'),
-            _buildRow('Duración:', '${training.duration} min'),
-            _buildRow('Ritmo:', training.pace),
-            _buildRow('Calorías:', training.calories.toString()),
+            _buildRow('Distancia:', '${training.distanceKm.toStringAsFixed(2)} km'),
+            _buildRow('Duración:', '${training.timeMinutes} min'),
+            _buildRow('Ritmo:', '${training.rhythm.toStringAsFixed(1)} min/km'),
+            _buildRow('Altitud:', '${training.altitude.toStringAsFixed(0)} m'),
+            _buildRow('Tipo:', training.trainingType),
+            _buildRow('Terreno:', training.terrainType),
             _buildRow('Clima:', training.weather),
-            _buildRow('Frecuencia cardiaca:', '${training.heartRate} bpm'),
+            if (training.notes != null && training.notes!.isNotEmpty)
+              _buildRow('Notas:', training.notes!),
             const SizedBox(height: 20),
             Align(
               alignment: Alignment.center,

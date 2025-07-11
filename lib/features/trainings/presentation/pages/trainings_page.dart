@@ -1,59 +1,186 @@
 // features/trainings/presentation/pages/trainings_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:runinsight/features/trainings/presentation/bloc/trainings_bloc.dart';
-import 'package:runinsight/features/trainings/presentation/widgets/trainings_list.dart';
-import 'package:runinsight/features/trainings/domain/usecases/get_trainings.dart';
-import 'package:runinsight/features/trainings/domain/entities/training_entity.dart';
-import 'package:runinsight/features/trainings/domain/repositories/trainings_repository.dart';
-import 'package:go_router/go_router.dart';
+import 'package:runinsight/features/user/data/services/user_service.dart';
+import '../bloc/trainings_bloc.dart';
+import '../bloc/trainings_event.dart';
+import '../bloc/trainings_state.dart';
+import '../widgets/training_card.dart';
 
-class DummyTrainingsRepository implements TrainingRepository {
+class TrainingsPage extends StatefulWidget {
+  const TrainingsPage({Key? key}) : super(key: key);
+
   @override
-  Future<List<TrainingEntity>> getTrainings() async {
-    return [
-      TrainingEntity(
-        id: '1',
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        kilometers: 6.2,
-        time: '00:34:42',
-        pace: '5:35',
-        duration: '00:34:42',
-        weather: 'Soleado',
-        heartRate: 134,
-        calories: 290,
-      ),
-    ];
-  }
+  State<TrainingsPage> createState() => _TrainingsPageState();
 }
 
-class TrainingsPage extends StatelessWidget {
-  const TrainingsPage({super.key});
+class _TrainingsPageState extends State<TrainingsPage> {
+  @override
+  void initState() {
+    super.initState();
+    _loadTrainings();
+  }
+
+  void _loadTrainings() {
+    // Obtener el ID del usuario desde el servicio
+    final userId = UserService.getUserId();
+    if (userId != null) {
+      context.read<TrainingsBloc>().add(LoadUserTrainings(userId));
+    } else {
+      print('⚠️ No se pudo obtener el ID del usuario');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: No se pudo identificar al usuario'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => TrainingsBloc(getTrainings: GetTrainings(DummyTrainingsRepository()))..add(LoadTrainings()),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Entrenamientos'),
-          backgroundColor: const Color(0xFF0C0C27),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              if (GoRouter.of(context).canPop()) {
-                context.pop();
-              } else {
-                context.go('/home');
-              }
-            },
+    return Scaffold(
+      backgroundColor: const Color(0xFF1A1A1A),
+      appBar: AppBar(
+        title: const Text(
+          'Mis Entrenamientos',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: const Color(0xFF0C0C27),
-        body: const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: TrainingsList(),
-        ),
+        backgroundColor: const Color(0xFF1A1A1A),
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _loadTrainings,
+          ),
+        ],
+      ),
+      body: BlocConsumer<TrainingsBloc, TrainingsState>(
+        listener: (context, state) {
+          if (state is TrainingsError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          if (state is TrainingsLoading) {
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Colors.orange,
+              ),
+            );
+          }
+
+          if (state is TrainingsError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.red,
+                    size: 64,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error al cargar entrenamientos',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    state.message,
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadTrainings,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                    ),
+                    child: const Text(
+                      'Reintentar',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          if (state is TrainingsLoaded) {
+            if (state.trainings.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.fitness_center,
+                      color: Colors.grey,
+                      size: 64,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'No tienes entrenamientos',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Comienza un entrenamiento para verlo aquí',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return RefreshIndicator(
+              onRefresh: () async {
+                _loadTrainings();
+              },
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: state.trainings.length,
+                itemBuilder: (context, index) {
+                  final training = state.trainings[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: TrainingCard(training: training),
+                  );
+                },
+              ),
+            );
+          }
+
+          return const Center(
+            child: Text(
+              'Cargando entrenamientos...',
+              style: TextStyle(color: Colors.white),
+            ),
+          );
+        },
       ),
     );
   }

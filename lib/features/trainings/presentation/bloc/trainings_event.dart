@@ -1,7 +1,17 @@
-part of 'trainings_bloc.dart';
+import 'package:equatable/equatable.dart';
 
-abstract class TrainingsEvent {}
+abstract class TrainingsEvent extends Equatable {
+  const TrainingsEvent();
 
-class LoadTrainings extends TrainingsEvent {}
+  @override
+  List<Object> get props => [];
+}
 
-class LoadTrainingsRequested extends TrainingsEvent {}
+class LoadUserTrainings extends TrainingsEvent {
+  final int userId;
+
+  const LoadUserTrainings(this.userId);
+
+  @override
+  List<Object> get props => [userId];
+}
