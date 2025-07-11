@@ -1,53 +1,25 @@
 // features/active_training/domain/entities/active_training_session.dart
 
 class ActiveTrainingSession {
-  final DateTime startTime;
-  final DateTime? endTime;
+  final int timeMinutes;
   final double distanceKm;
-  final Duration duration;
-  final double pace;
-  final int avgHeartRate;
-  final int caloriesBurned;
+  final double rhythm;
+  final String date;
+  final double altitude;
+  final String? notes;
+  final String trainingType;
+  final String terrainType;
+  final String weather;
 
   ActiveTrainingSession({
-    required this.startTime,
-    this.endTime,
+    required this.timeMinutes,
     required this.distanceKm,
-    required this.duration,
-    required this.pace,
-    required this.avgHeartRate,
-    required this.caloriesBurned,
+    required this.rhythm,
+    required this.date,
+    required this.altitude,
+    this.notes,
+    required this.trainingType,
+    required this.terrainType,
+    required this.weather,
   });
-
-  ActiveTrainingSession copyWith({
-    DateTime? startTime,
-    DateTime? endTime,
-    double? distanceKm,
-    Duration? duration,
-    double? pace,
-    int? avgHeartRate,
-    int? caloriesBurned,
-  }) {
-    return ActiveTrainingSession(
-      startTime: startTime ?? this.startTime,
-      endTime: endTime ?? this.endTime,
-      distanceKm: distanceKm ?? this.distanceKm,
-      duration: duration ?? this.duration,
-      pace: pace ?? this.pace,
-      avgHeartRate: avgHeartRate ?? this.avgHeartRate,
-      caloriesBurned: caloriesBurned ?? this.caloriesBurned,
-    );
-  }
-
-  static ActiveTrainingSession empty() {
-    return ActiveTrainingSession(
-      startTime: DateTime.now(),
-      endTime: null,
-      distanceKm: 0.0,
-      duration: Duration.zero,
-      pace: 0.0,
-      avgHeartRate: 0,
-      caloriesBurned: 0,
-    );
-  }
 }

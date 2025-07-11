@@ -5,10 +5,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/navigation/app_router.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'core/di/dependency_injection.dart';
+import 'features/user/data/services/user_service.dart';
 
-void main() {
+void main() async {
   // Optimizaciones para mejorar el rendimiento
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Inicializar UserService para cargar el token desde SharedPreferences
+  await UserService.init();
   
   // Configurar el modo de debug para mejor rendimiento
   if (kDebugMode) {

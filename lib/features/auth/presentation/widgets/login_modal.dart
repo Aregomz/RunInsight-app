@@ -70,8 +70,79 @@ class _LoginModalState extends State<LoginModal>
                               context.go('/home');
                             }
                             if (state is AuthFailure) {
+                              // Determinar el color del SnackBar según el tipo de error
+                              Color snackBarColor;
+                              IconData icon;
+                              String title;
+                              
+                              if (state.message.contains('Contraseña incorrecta')) {
+                                snackBarColor = Colors.orange;
+                                icon = Icons.lock_outline;
+                                title = 'Error de Contraseña';
+                              } else if (state.message.contains('Usuario no encontrado')) {
+                                snackBarColor = Colors.blue;
+                                icon = Icons.person_off;
+                                title = 'Usuario No Encontrado';
+                              } else if (state.message.contains('Credenciales incorrectas')) {
+                                snackBarColor = Colors.orange;
+                                icon = Icons.warning;
+                                title = 'Credenciales Inválidas';
+                              } else if (state.message.contains('Error del servidor')) {
+                                snackBarColor = Colors.red;
+                                icon = Icons.error;
+                                title = 'Error del Servidor';
+                              } else if (state.message.contains('Error de conexión')) {
+                                snackBarColor = Colors.blue;
+                                icon = Icons.wifi_off;
+                                title = 'Error de Conexión';
+                              } else {
+                                snackBarColor = Colors.red;
+                                icon = Icons.error_outline;
+                                title = 'Error';
+                              }
+                              
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(state.message)),
+                                SnackBar(
+                                  content: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(icon, color: Colors.white, size: 20),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              title,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          state.message,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  backgroundColor: snackBarColor,
+                                  duration: const Duration(seconds: 5),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  margin: const EdgeInsets.all(16),
+                                  elevation: 8,
+                                ),
                               );
                             }
                           },

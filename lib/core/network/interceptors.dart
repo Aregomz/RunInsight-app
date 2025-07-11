@@ -7,7 +7,14 @@ class AuthInterceptor extends Interceptor {
     // Agregar token de autenticación si existe
     final token = UserService.getAuthToken();
     if (token != null && token.isNotEmpty) {
+      // Agregar token en múltiples formatos para compatibilidad
       options.headers['Authorization'] = 'Bearer $token';
+      options.headers['X-Auth-Token'] = token;
+      options.headers['token'] = token;
+      
+      print('🔑 Token agregado: $token');
+    } else {
+      print('⚠️ No hay token disponible');
     }
     
     // Agregar headers por defecto

@@ -7,14 +7,15 @@ import 'package:runinsight/features/profile/presentation/pages/profile_page.dart
 import 'package:runinsight/features/ranking/presentation/pages/ranking_page.dart';
 import 'package:runinsight/features/trainings/presentation/pages/trainings_page.dart';
 import 'package:runinsight/features/active_training/presentation/pages/TrainingInProgressPage.dart';
+import 'package:runinsight/features/active_training/presentation/pages/training_summary_page.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:runinsight/features/active_training/presentation/bloc/active_training_bloc.dart';
-import 'package:runinsight/features/active_training/domain/usecases/start_training.dart';
-import 'package:runinsight/features/active_training/domain/usecases/update_training_metrics.dart';
-import 'package:runinsight/features/active_training/domain/usecases/finish_training.dart';
-import 'package:runinsight/features/active_training/domain/usecases/get_training_summary.dart';
 import 'package:runinsight/features/active_training/domain/repositories/active_training_repository.dart';
 import 'package:runinsight/features/active_training/domain/entities/active_training_session.dart';
+import 'package:runinsight/features/active_training/domain/usecases/save_active_training.dart';
+import 'package:runinsight/features/active_training/data/repositories/active_training_repository_impl.dart';
+import 'package:runinsight/features/active_training/data/datasources/active_training_remote_datasource.dart';
+import 'package:runinsight/features/active_training/data/services/training_data_service.dart';
 import 'package:runinsight/features/chat_box/presentation/pages/chat_screen.dart';
 
 class AppRouter {
@@ -35,25 +36,40 @@ class AppRouter {
           ),
           GoRoute(
             path: '/training_in_progress',
-            builder:
-                (_, __) => BlocProvider(
-                  create:
-                      (_) => ActiveTrainingBloc(
-                        startTraining: StartTraining(
-                          _DummyActiveTrainingRepository(),
-                        ),
-                        updateTrainingMetrics: UpdateTrainingMetrics(
-                          _DummyActiveTrainingRepository(),
-                        ),
-                        finishTraining: FinishTraining(
-                          _DummyActiveTrainingRepository(),
-                        ),
-                        getTrainingSummary: GetTrainingSummary(
-                          _DummyActiveTrainingRepository(),
-                        ),
-                      ),
-                  child: const TrainingInProgressPage(),
+            builder: (_, __) => BlocProvider(
+              create: (_) => ActiveTrainingBloc(
+                saveActiveTraining: SaveActiveTraining(
+                  ActiveTrainingRepositoryImpl(
+                    remoteDatasource: ActiveTrainingRemoteDatasourceImpl(),
+                  ),
                 ),
+              ),
+              child: const TrainingInProgressPage(),
+            ),
+          ),
+          GoRoute(
+            path: '/training-summary',
+            builder: (context, state) {
+              // Obtener los datos del entrenamiento desde el servicio
+              final trainingData = TrainingDataService.getLastTrainingData();
+              
+              if (trainingData == null) {
+                // Si no hay datos, mostrar datos de ejemplo y mensaje
+                return TrainingSummaryPage(trainingData: {
+                  'time_minutes': '0',
+                  'distance_km': '0.0',
+                  'rhythm': '0.0',
+                  'altitude': '0',
+                  'trainingType': 'Carrera',
+                  'terrainType': 'Pavimento',
+                  'weather': 'No disponible',
+                  'notes': '',
+                  'date': '${DateTime.now().day.toString().padLeft(2, '0')}/${DateTime.now().month.toString().padLeft(2, '0')}/${DateTime.now().year}',
+                });
+              }
+              
+              return TrainingSummaryPage(trainingData: trainingData);
+            },
           ),
           GoRoute(path: '/chat', builder: (_, __) => const ChatScreen()),
           // futuras rutas: /coach, /social, etc.
@@ -61,27 +77,4 @@ class AppRouter {
       ),
     ],
   );
-}
-
-// Dummy repository para pruebas locales
-class _DummyActiveTrainingRepository implements ActiveTrainingRepository {
-  @override
-  Future<void> finishTraining() async {}
-
-  @override
-  Future<ActiveTrainingSession?> getActiveTraining() async => null;
-
-  @override
-  Future<ActiveTrainingSession> getSummary() async =>
-      ActiveTrainingSession.empty();
-
-  @override
-  Future<void> startTraining() async {}
-
-  @override
-  Future<void> updateMetrics(ActiveTrainingSession session) async {}
-
-  @override
-  Future<ActiveTrainingSession> endTraining() async =>
-      ActiveTrainingSession.empty();
 }

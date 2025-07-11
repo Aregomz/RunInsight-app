@@ -1,26 +1,84 @@
-// features/active_training/presentation/bloc/active_training_state.dart
-part of 'active_training_bloc.dart';
+import 'package:equatable/equatable.dart';
+import '../../domain/entities/active_training_session.dart';
 
-abstract class ActiveTrainingState {}
+abstract class ActiveTrainingState extends Equatable {
+  const ActiveTrainingState();
+  @override
+  List<Object?> get props => [];
+}
 
 class ActiveTrainingInitial extends ActiveTrainingState {}
 
-class ActiveTrainingLoading extends ActiveTrainingState {}
-
 class ActiveTrainingInProgress extends ActiveTrainingState {
-  final ActiveTrainingSession session;
+  final int timeMinutes;
+  final double distanceKm;
+  final double rhythm;
+  final double altitude;
+  final String weather;
 
-  ActiveTrainingInProgress({required this.session});
+  const ActiveTrainingInProgress({
+    required this.timeMinutes,
+    required this.distanceKm,
+    required this.rhythm,
+    required this.altitude,
+    required this.weather,
+  });
+
+  @override
+  List<Object?> get props => [timeMinutes, distanceKm, rhythm, altitude, weather];
 }
 
-class ActiveTrainingCompleted extends ActiveTrainingState {
-  final ActiveTrainingSession summary;
+class ActiveTrainingReadyToFinish extends ActiveTrainingState {
+  final int timeMinutes;
+  final double distanceKm;
+  final double rhythm;
+  final double altitude;
+  final String weather;
 
-  ActiveTrainingCompleted({required this.summary});
+  const ActiveTrainingReadyToFinish({
+    required this.timeMinutes,
+    required this.distanceKm,
+    required this.rhythm,
+    required this.altitude,
+    required this.weather,
+  });
+
+  @override
+  List<Object?> get props => [timeMinutes, distanceKm, rhythm, altitude, weather];
 }
 
-class ActiveTrainingError extends ActiveTrainingState {
+class ActiveTrainingSaving extends ActiveTrainingState {}
+
+class ActiveTrainingSuccess extends ActiveTrainingState {
+  final int timeMinutes;
+  final double distanceKm;
+  final double rhythm;
+  final double altitude;
+  final String weather;
+  final String trainingType;
+  final String terrainType;
+  final String? notes;
+  final String date;
+
+  const ActiveTrainingSuccess({
+    required this.timeMinutes,
+    required this.distanceKm,
+    required this.rhythm,
+    required this.altitude,
+    required this.weather,
+    required this.trainingType,
+    required this.terrainType,
+    this.notes,
+    required this.date,
+  });
+
+  @override
+  List<Object?> get props => [timeMinutes, distanceKm, rhythm, altitude, weather, trainingType, terrainType, notes, date];
+}
+
+class ActiveTrainingFailure extends ActiveTrainingState {
   final String message;
-
-  ActiveTrainingError(this.message);
+  const ActiveTrainingFailure(this.message);
+  @override
+  List<Object?> get props => [message];
 }
