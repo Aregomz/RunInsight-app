@@ -28,7 +28,7 @@ class StatsSummary extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  weeklyKm.toString(),
+                  weeklyKm == 0 ? '0.0' : weeklyKm.toString(),
                   style: const TextStyle(
                     color: Color(0xFFFF6A00),
                     fontWeight: FontWeight.w900,
@@ -36,10 +36,21 @@ class StatsSummary extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'km esta semana',
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                Text(
+                  weeklyKm == 0 ? 'km esta semana' : 'km esta semana',
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
+                if (weeklyKm == 0) ...[
+                  const SizedBox(height: 4),
+                  const Text(
+                    '¡Comienza a entrenar!',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -71,6 +82,17 @@ class StatsSummary extends StatelessWidget {
                   'Ritmo promedio',
                   style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
+                if (avgPace == '0.0 min/km' || avgPace == '0.00 min/km') ...[
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Sin datos aún',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

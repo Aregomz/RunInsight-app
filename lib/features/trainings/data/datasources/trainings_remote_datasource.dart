@@ -30,7 +30,40 @@ class TrainingsRemoteDataSourceImpl implements TrainingsRemoteDataSource {
       }
     } on DioException catch (e) {
       print('❌ Error DioException al obtener entrenamientos: ${e.message}');
-      print('❌ Response: ${e.response?.data}');
+      print('❌ Status Code: ${e.response?.statusCode}');
+      print('❌ Response Data: ${e.response?.data}');
+      
+      // Si es un error 404, 204, o similar, devolver lista vacía para usuarios nuevos
+      if (e.response?.statusCode == 404 || 
+          e.response?.statusCode == 204 ||
+          e.response?.statusCode == 400) {
+        print('📡 Usuario nuevo sin entrenamientos (${e.response?.statusCode}), devolviendo lista vacía');
+        return TrainingResponseModel(
+          message: 'No hay entrenamientos disponibles aún',
+          trainings: [],
+          success: true,
+        );
+      }
+      
+      // Si el mensaje del backend indica que no hay datos
+      if (e.response?.data != null) {
+        final responseData = e.response!.data;
+        if (responseData is Map<String, dynamic>) {
+          final message = responseData['message']?.toString().toLowerCase() ?? '';
+          if (message.contains('no hay') || 
+              message.contains('empty') || 
+              message.contains('not found') ||
+              message.contains('sin entrenamientos')) {
+            print('📡 Backend indica que no hay entrenamientos, devolviendo lista vacía');
+            return TrainingResponseModel(
+              message: 'No hay entrenamientos disponibles aún',
+              trainings: [],
+              success: true,
+            );
+          }
+        }
+      }
+      
       throw Exception('Error de red al obtener entrenamientos: ${e.message}');
     } catch (e) {
       print('❌ Error inesperado al obtener entrenamientos: $e');

@@ -31,6 +31,19 @@ class WeeklyStatsRemoteDataSourceImpl implements WeeklyStatsRemoteDataSource {
     } on DioException catch (e) {
       print('❌ Error DioException al obtener estadísticas semanales: ${e.message}');
       print('❌ Response: ${e.response?.data}');
+      
+      // Si es un error 404 o similar, devolver datos por defecto para usuarios nuevos
+      if (e.response?.statusCode == 404 || e.response?.statusCode == 204) {
+        print('📊 Usuario nuevo sin estadísticas, devolviendo datos por defecto');
+        return WeeklyStatsResponseModel(
+          message: 'No hay estadísticas disponibles aún',
+          totalKm: 0.0,
+          totalTrainings: 0,
+          avgRhythm: 0.0,
+          success: true,
+        );
+      }
+      
       throw Exception('Error de red al obtener estadísticas semanales: ${e.message}');
     } catch (e) {
       print('❌ Error inesperado al obtener estadísticas semanales: $e');

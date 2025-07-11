@@ -19,13 +19,40 @@ class TrainingsBloc extends Bloc<TrainingsEvent, TrainingsState> {
     emit(TrainingsLoading());
     
     try {
+      // Verificar si el ID de usuario es válido
+      if (event.userId <= 0) {
+        print('❌ ID de usuario inválido: ${event.userId}');
+        emit(TrainingsError(message: 'Sesión expirada. Inicia sesión nuevamente.'));
+        return;
+      }
+      
       print('🔄 Cargando entrenamientos del usuario ${event.userId}');
       final trainings = await getUserTrainings(event.userId);
       emit(TrainingsLoaded(trainings: trainings));
       print('✅ ${trainings.length} entrenamientos cargados exitosamente');
     } catch (e) {
       print('❌ Error al cargar entrenamientos: $e');
-      emit(TrainingsError(message: e.toString()));
+      print('❌ Tipo de error: ${e.runtimeType}');
+      print('❌ Mensaje completo: ${e.toString()}');
+      
+      // Para la mayoría de errores, asumir que es un usuario nuevo sin datos
+      // y mostrar lista vacía en lugar de error
+      if (e.toString().contains('timeout') || 
+          e.toString().contains('connection') ||
+          e.toString().contains('network')) {
+        // Solo errores de red reales muestran error
+        print('🌐 Error de conexión real detectado');
+        emit(TrainingsError(message: 'Error de conexión. Verifica tu internet.'));
+      } else if (e.toString().contains('401') || 
+                 e.toString().contains('403')) {
+        // Error de autenticación
+        print('🔐 Error de autenticación detectado');
+        emit(TrainingsError(message: 'Sesión expirada. Inicia sesión nuevamente.'));
+      } else {
+        // Para cualquier otro error, asumir que es un usuario sin datos
+        print('📝 Asumiendo usuario sin entrenamientos, mostrando lista vacía');
+        emit(TrainingsLoaded(trainings: []));
+      }
     }
   }
 }

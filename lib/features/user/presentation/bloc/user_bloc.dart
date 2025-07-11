@@ -46,12 +46,31 @@ class UserBloc extends Bloc<UserEvent, UserState> {
       emit(UserLoaded(userData: userData));
     } catch (e) {
       print('❌ Error al cargar datos del usuario: $e');
-      emit(
-        UserError(
-          message:
-              'No se pudo obtener datos del usuario. Debes hacer login primero: $e',
-        ),
-      );
+      
+      // Para usuarios nuevos o errores de red, usar datos por defecto
+      if (e.toString().contains('No hay token') || 
+          e.toString().contains('Error de red') ||
+          e.toString().contains('404')) {
+        print('👤 Usuario nuevo o error de red, usando datos por defecto');
+        emit(UserLoaded(userData: {
+          'username': 'Usuario',
+          'name': 'Usuario',
+          'email': 'usuario@runinsight.com',
+          'stats': {
+            'km_total': 0.0,
+            'training_counter': 0,
+            'training_streak': 0,
+            'best_rhythm': 0.0,
+          }
+        }));
+      } else {
+        emit(
+          UserError(
+            message:
+                'No se pudo obtener datos del usuario. Debes hacer login primero: $e',
+          ),
+        );
+      }
     }
   }
 

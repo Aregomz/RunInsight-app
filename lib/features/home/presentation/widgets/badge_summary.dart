@@ -37,13 +37,24 @@ class BadgeSummary extends StatelessWidget {
                     fontSize: 22,
                   ),
                 ),
+                if (totalInsignias == 0) ...[
+                  const SizedBox(height: 4),
+                  const Text(
+                    '¡Entrena para ganar insignias!',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
-          const Icon(
-            Icons.emoji_events,
-            color: Color(0xFFFFD700), // Color dorado para la medalla
-            size: 54, // Trofeo más grande
+          Icon(
+            totalInsignias == 0 ? Icons.emoji_events_outlined : Icons.emoji_events,
+            color: totalInsignias == 0 ? Colors.grey : const Color(0xFFFFD700),
+            size: 54,
           ),
         ],
       ),

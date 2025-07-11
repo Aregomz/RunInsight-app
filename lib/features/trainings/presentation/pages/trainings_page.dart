@@ -1,6 +1,7 @@
 // features/trainings/presentation/pages/trainings_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:runinsight/features/user/data/services/user_service.dart';
 import '../bloc/trainings_bloc.dart';
 import '../bloc/trainings_event.dart';
@@ -28,12 +29,8 @@ class _TrainingsPageState extends State<TrainingsPage> {
       context.read<TrainingsBloc>().add(LoadUserTrainings(userId));
     } else {
       print('⚠️ No se pudo obtener el ID del usuario');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error: No se pudo identificar al usuario'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      // En lugar de mostrar SnackBar, manejamos esto en el estado
+      context.read<TrainingsBloc>().add(LoadUserTrainings(-1)); // ID inválido para manejar el error
     }
   }
 
@@ -60,64 +57,109 @@ class _TrainingsPageState extends State<TrainingsPage> {
       ),
       body: BlocConsumer<TrainingsBloc, TrainingsState>(
         listener: (context, state) {
-          if (state is TrainingsError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
+          // Removemos el SnackBar de error para evitar mensajes técnicos
+          // Los errores se manejan en la UI principal
         },
         builder: (context, state) {
           if (state is TrainingsLoading) {
             return const Center(
-              child: CircularProgressIndicator(
-                color: Colors.orange,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    color: Colors.orange,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Cargando entrenamientos...',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
             );
           }
 
           if (state is TrainingsError) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    color: Colors.red,
-                    size: 64,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error al cargar entrenamientos',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.wifi_off,
+                      color: Colors.orange,
+                      size: 64,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    state.message,
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
+                    const SizedBox(height: 16),
+                    const Text(
+                      'No se pudieron cargar los entrenamientos',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _loadTrainings,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
+                    const SizedBox(height: 8),
+                    Text(
+                      state.message,
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    child: const Text(
-                      'Reintentar',
-                      style: TextStyle(color: Colors.white),
+                    const SizedBox(height: 24),
+                    Column(
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: _loadTrainings,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            minimumSize: const Size(200, 48),
+                          ),
+                          icon: const Icon(Icons.refresh, color: Colors.white),
+                          label: const Text(
+                            'Reintentar',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            context.go('/training_in_progress');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            minimumSize: const Size(200, 48),
+                          ),
+                          icon: const Icon(Icons.play_arrow, color: Colors.white),
+                          label: const Text(
+                            'Comenzar Nuevo Entrenamiento',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton.icon(
+                          onPressed: () {
+                            context.go('/home');
+                          },
+                          icon: const Icon(Icons.home, color: Colors.grey),
+                          label: const Text(
+                            'Volver al Inicio',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           }
@@ -130,26 +172,41 @@ class _TrainingsPageState extends State<TrainingsPage> {
                   children: [
                     const Icon(
                       Icons.fitness_center,
-                      color: Colors.grey,
+                      color: Colors.orange,
                       size: 64,
                     ),
                     const SizedBox(height: 16),
                     const Text(
-                      'No tienes entrenamientos',
+                      '¡Bienvenido a RunInsight!',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 18,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Comienza un entrenamiento para verlo aquí',
+                      'Aún no tienes entrenamientos registrados.\n¡Comienza tu primer entrenamiento ahora!',
                       style: TextStyle(
                         color: Colors.grey,
                         fontSize: 14,
                       ),
                       textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        context.go('/training_in_progress');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                      icon: const Icon(Icons.play_arrow, color: Colors.white),
+                      label: const Text(
+                        'Comenzar Entrenamiento',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),
