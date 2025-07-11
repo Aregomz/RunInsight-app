@@ -22,6 +22,12 @@ import 'package:runinsight/features/trainings/domain/usecases/get_user_trainings
 import 'package:runinsight/features/trainings/data/repositories/trainings_repository_impl.dart';
 import 'package:runinsight/features/trainings/data/datasources/trainings_remote_datasource.dart';
 import 'package:runinsight/core/network/dio_client.dart';
+import 'package:runinsight/features/home/presentation/bloc/home_bloc.dart';
+import 'package:runinsight/features/home/domain/usecases/get_weekly_stats.dart';
+import 'package:runinsight/features/home/data/repositories/weekly_stats_repository_impl.dart';
+import 'package:runinsight/features/home/data/datasources/weekly_stats_remote_datasource.dart';
+import 'package:runinsight/features/home/domain/usecases/get_weather.dart';
+import 'package:runinsight/features/home/data/repositories/weather_repository_impl.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -32,7 +38,24 @@ class AppRouter {
       ShellRoute(
         builder: (_, __, child) => AppShell(child: child),
         routes: [
-          GoRoute(path: '/home', builder: (_, __) => const HomePage()),
+          GoRoute(
+            path: '/home',
+            builder: (_, __) => BlocProvider(
+              create: (_) => HomeBloc(
+                getWeeklyStats: GetWeeklyStats(
+                  WeeklyStatsRepositoryImpl(
+                    remoteDataSource: WeeklyStatsRemoteDataSourceImpl(
+                      dio: DioClient.instance,
+                    ),
+                  ),
+                ),
+                getWeather: GetWeather(
+                  WeatherRepositoryImpl(),
+                ),
+              ),
+              child: const HomePage(),
+            ),
+          ),
           GoRoute(path: '/profile', builder: (_, __) => const ProfilePage()),
           GoRoute(path: '/ranking', builder: (_, __) => const RankingPage()),
           GoRoute(
