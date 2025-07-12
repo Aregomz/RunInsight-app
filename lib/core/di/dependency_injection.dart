@@ -9,6 +9,10 @@ import '../../features/ranking/domain/usecases/get_ranking.dart';
 import '../../features/ranking/domain/usecases/get_user_position.dart';
 import '../../features/ranking/domain/usecases/add_friend.dart';
 import '../../features/ranking/presentation/bloc/ranking_bloc.dart';
+import '../../features/profile/data/datasources/profile_remote_datasource.dart';
+import '../../features/profile/data/repositories/profile_repository_impl.dart';
+import '../../features/profile/domain/repositories/profile_repository.dart';
+import '../../features/profile/domain/usecases/update_profile_usecase.dart';
 import '../../core/network/dio_client.dart';
 
 class DependencyInjection {
@@ -72,5 +76,15 @@ class DependencyInjection {
       getRankingUseCase: getGetRankingUseCase(),
       getUserPosition: getGetUserPositionUseCase(),
     );
+  }
+
+  // Profile dependencies
+  static ProfileRepository getProfileRepository() {
+    final profileRemoteDataSource = ProfileRemoteDataSourceImpl();
+    return ProfileRepositoryImpl(remoteDataSource: profileRemoteDataSource);
+  }
+
+  static UpdateProfileUseCase getUpdateProfileUseCase() {
+    return UpdateProfileUseCase(repository: getProfileRepository());
   }
 } 

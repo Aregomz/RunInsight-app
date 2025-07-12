@@ -62,10 +62,10 @@ class ProfileView extends StatelessWidget {
               final stats = userData['stats'] ?? {};
 
               // Datos de estadísticas del usuario desde la API
-              final kmTotal = stats['km_total']?.toString() ?? '0.0';
+              final kmTotal = _formatDecimal(stats['km_total']) ?? '0.00';
               final trainingCounter =
                   stats['training_counter']?.toString() ?? '0';
-              final bestRhythm = stats['best_rhythm']?.toString() ?? '0.00';
+              final bestRhythm = _formatDecimal(stats['best_rhythm']) ?? '0.00';
 
               return _buildProfileView(
                 context,
@@ -75,6 +75,7 @@ class ProfileView extends StatelessWidget {
                 kmTotal,
                 trainingCounter,
                 bestRhythm,
+                userData,
               );
             }
 
@@ -100,6 +101,7 @@ class ProfileView extends StatelessWidget {
     String kmTotal,
     String trainingCounter,
     String bestRhythm,
+    Map<String, dynamic> userData,
   ) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -145,7 +147,35 @@ class ProfileView extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: Implementar edición de perfil
+                    final userId = userData['id'];
+                    print('Debug: userId = $userId');
+                    print('Debug: userData = $userData');
+                    
+                    if (userId != null) {
+                      try {
+                        print('Debug: Attempting to navigate to /edit-profile');
+                        context.push('/edit-profile', extra: {
+                          'userId': userId.toString(),
+                          'currentUserData': userData,
+                        });
+                        print('Debug: Navigation successful');
+                      } catch (e) {
+                        print('Error en navegación: $e');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error al abrir edición: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Error: No se pudo obtener el ID del usuario'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF23233B),
@@ -196,6 +226,23 @@ class ProfileView extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String? _formatDecimal(dynamic value) {
+    if (value == null) return null;
+    
+    if (value is num) {
+      return value.toStringAsFixed(2);
+    }
+    
+    if (value is String) {
+      final numValue = double.tryParse(value);
+      if (numValue != null) {
+        return numValue.toStringAsFixed(2);
+      }
+    }
+    
+    return value.toString();
   }
 }
 

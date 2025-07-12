@@ -2,14 +2,14 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/user_profile_entity.dart';
 import '../../domain/usecases/get_user_profile.dart';
-import '../../domain/usecases/update_user_profile.dart';
+import '../../domain/usecases/update_profile_usecase.dart';
 
 part 'profile_event.dart';
 part 'profile_state.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final GetUserProfile getUserProfile;
-  final UpdateUserProfile updateUserProfile;
+  final UpdateProfileUseCase updateUserProfile;
 
   ProfileBloc({required this.getUserProfile, required this.updateUserProfile})
       : super(ProfileInitial()) {
@@ -40,7 +40,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       final current = state as ProfileLoaded;
       emit(ProfileLoading());
       try {
-        await updateUserProfile(heightCm: event.heightCm, weightKg: event.weightKg);
+        await updateUserProfile('1', height: event.heightCm, weight: event.weightKg, experience: 'Principiante');
         final user = await getUserProfile();
         emit(ProfileLoaded(user: user));
       } catch (e) {

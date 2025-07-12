@@ -5,6 +5,7 @@ import 'package:runinsight/features/auth/presentation/pages/register_page.dart';
 import 'package:runinsight/features/auth/presentation/pages/welcome_page.dart';
 import 'package:runinsight/features/home/presentation/pages/home_page.dart';
 import 'package:runinsight/features/profile/presentation/pages/profile_page.dart';
+import 'package:runinsight/features/profile/presentation/pages/profile_edit_page.dart';
 import 'package:runinsight/features/ranking/presentation/pages/ranking_page.dart';
 import 'package:runinsight/features/trainings/presentation/pages/trainings_page.dart';
 import 'package:runinsight/features/active_training/presentation/pages/TrainingInProgressPage.dart';
@@ -92,6 +93,53 @@ class AppRouter {
             ),
           ),
           GoRoute(path: '/profile', builder: (_, __) => const ProfilePage()),
+          GoRoute(
+            path: '/edit-profile',
+            name: 'profile-edit',
+            builder: (context, state) {
+              print('Debug: Building /profile/edit route');
+              final extra = state.extra as Map<String, dynamic>?;
+              print('Debug: extra = $extra');
+              
+              final userId = extra?['userId'] as String? ?? '';
+              final currentUserData = extra?['currentUserData'] as Map<String, dynamic>? ?? {};
+              
+              print('Debug: userId from route = $userId');
+              print('Debug: currentUserData from route = $currentUserData');
+              
+              if (userId.isEmpty) {
+                return Scaffold(
+                  backgroundColor: const Color(0xFF1A1A1A),
+                  appBar: AppBar(
+                    backgroundColor: const Color(0xFF1A1A1A),
+                    foregroundColor: Colors.white,
+                    title: const Text('Error', style: TextStyle(color: Colors.white)),
+                  ),
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Error: ID de usuario no válido',
+                          style: TextStyle(color: Colors.white, fontSize: 18),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => context.pop(),
+                          child: const Text('Volver'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              
+              return ProfileEditPage(
+                userId: userId,
+                currentUserData: currentUserData,
+              );
+            },
+          ),
           GoRoute(path: '/ranking', builder: (_, __) => const RankingPage()),
           GoRoute(
             path: '/trainings',
