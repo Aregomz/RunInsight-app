@@ -8,3 +8,9 @@ class LoadRankingRequested extends RankingEvent {
 
   LoadRankingRequested(this.userId);
 }
+
+class LoadBadgesRequested extends RankingEvent {
+  final int userId;
+
+  LoadBadgesRequested(this.userId);
+}

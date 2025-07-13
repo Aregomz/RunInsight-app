@@ -3,10 +3,12 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/ranking/data/datasources/friends_ranking_remote_datasource.dart';
+import '../../features/ranking/data/datasources/badges_remote_datasource.dart';
 import '../../features/ranking/data/repositories/friends_ranking_repository_impl.dart';
 import '../../features/ranking/domain/repositories/ranking_repository.dart';
 import '../../features/ranking/domain/usecases/get_ranking.dart';
 import '../../features/ranking/domain/usecases/get_user_position.dart';
+import '../../features/ranking/domain/usecases/get_user_badges.dart';
 import '../../features/ranking/domain/usecases/add_friend.dart';
 import '../../features/ranking/presentation/bloc/ranking_bloc.dart';
 import '../../features/profile/data/datasources/profile_remote_datasource.dart';
@@ -20,6 +22,7 @@ class DependencyInjection {
     // Configurar datasources
     final authRemoteDataSource = AuthRemoteDataSourceImpl();
     final friendsRankingRemoteDataSource = FriendsRankingRemoteDataSourceImpl(dio: DioClient.instance);
+    final badgesRemoteDataSource = BadgesRemoteDataSourceImpl();
     
     // Configurar repositories
     final authRepository = AuthRepositoryImpl(
@@ -27,17 +30,20 @@ class DependencyInjection {
     );
     final rankingRepository = FriendsRankingRepositoryImpl(
       remoteDataSource: friendsRankingRemoteDataSource,
+      badgesRemoteDataSource: badgesRemoteDataSource,
     );
     
     // Configurar use cases
     final getRankingUseCase = GetRankingUseCase(rankingRepository);
     final getUserPositionUseCase = GetUserPosition(rankingRepository);
+    final getUserBadgesUseCase = GetUserBadges(repository: rankingRepository);
     
     // Configurar blocs
     final authBloc = AuthBloc(authRepository: authRepository);
     final rankingBloc = RankingBloc(
       getRankingUseCase: getRankingUseCase,
       getUserPosition: getUserPositionUseCase,
+      getUserBadges: getUserBadgesUseCase,
     );
     
     // Aquí podrías usar un service locator como GetIt para registrar las dependencias
@@ -56,7 +62,11 @@ class DependencyInjection {
 
   static RankingRepository getRankingRepository() {
     final friendsRankingRemoteDataSource = FriendsRankingRemoteDataSourceImpl(dio: DioClient.instance);
-    return FriendsRankingRepositoryImpl(remoteDataSource: friendsRankingRemoteDataSource);
+    final badgesRemoteDataSource = BadgesRemoteDataSourceImpl();
+    return FriendsRankingRepositoryImpl(
+      remoteDataSource: friendsRankingRemoteDataSource,
+      badgesRemoteDataSource: badgesRemoteDataSource,
+    );
   }
 
   static GetRankingUseCase getGetRankingUseCase() {
@@ -71,10 +81,15 @@ class DependencyInjection {
     return AddFriendUseCase(getRankingRepository());
   }
 
+  static GetUserBadges getGetUserBadgesUseCase() {
+    return GetUserBadges(repository: getRankingRepository());
+  }
+
   static RankingBloc getRankingBloc() {
     return RankingBloc(
       getRankingUseCase: getGetRankingUseCase(),
       getUserPosition: getGetUserPositionUseCase(),
+      getUserBadges: GetUserBadges(repository: getRankingRepository()),
     );
   }
 

@@ -33,6 +33,7 @@ import 'package:runinsight/features/home/data/repositories/weather_repository_im
 import 'package:runinsight/features/ranking/domain/usecases/add_friend.dart';
 import 'package:runinsight/features/ranking/data/repositories/friends_ranking_repository_impl.dart';
 import 'package:runinsight/features/ranking/data/datasources/friends_ranking_remote_datasource.dart';
+import 'package:runinsight/features/ranking/data/datasources/badges_remote_datasource.dart';
 import 'package:runinsight/features/user/data/services/user_service.dart';
 
 class AppRouter {
@@ -235,6 +236,7 @@ class AppRouter {
           remoteDataSource: FriendsRankingRemoteDataSourceImpl(
             dio: DioClient.instance,
           ),
+          badgesRemoteDataSource: BadgesRemoteDataSourceImpl(),
         ),
       );
 
@@ -281,6 +283,7 @@ class AppRouter {
           remoteDataSource: FriendsRankingRemoteDataSourceImpl(
             dio: DioClient.instance,
           ),
+          badgesRemoteDataSource: BadgesRemoteDataSourceImpl(),
         ),
       );
 

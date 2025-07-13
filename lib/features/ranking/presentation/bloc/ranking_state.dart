@@ -19,6 +19,14 @@ class RankingLoaded extends RankingState {
   });
 }
 
+class BadgesLoading extends RankingState {}
+
+class BadgesLoaded extends RankingState {
+  final List<BadgeEntity> badges;
+
+  BadgesLoaded({required this.badges});
+}
+
 class RankingError extends RankingState {
   final String message;
 
