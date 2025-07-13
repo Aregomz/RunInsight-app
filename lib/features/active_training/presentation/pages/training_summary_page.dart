@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/share_training_widget.dart';
 
 class TrainingSummaryPage extends StatelessWidget {
   final Map<String, dynamic> trainingData;
@@ -138,39 +139,8 @@ class TrainingSummaryPage extends StatelessWidget {
                     
                     const SizedBox(height: 32),
                     
-                    // Mensaje temporal
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.blue.withOpacity(0.5)),
-                      ),
-                      child: const Column(
-                        children: [
-                          Icon(Icons.info_outline, color: Colors.blue, size: 24),
-                          SizedBox(height: 8),
-                          Text(
-                            'Funcionalidad de compartir en desarrollo',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Próximamente podrás compartir tu entrenamiento en redes sociales',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
+                    // Widget de compartir entrenamiento
+                    ShareTrainingWidget(trainingData: trainingData),
                     
                     const SizedBox(height: 32),
                     

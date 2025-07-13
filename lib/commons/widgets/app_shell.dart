@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../features/active_training/data/services/training_state_service.dart';
 
 class AppShell extends StatelessWidget {
   final Widget child;
@@ -7,7 +9,18 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String location = ModalRoute.of(context)?.settings.name ?? '';
+    // Usar GoRouter para obtener la ubicación actual
+    final String location = GoRouterState.of(context).uri.path;
+    
+    // Debug: imprimir la ubicación actual
+    print('🔍 AppShell - Current location: $location');
+
+    // Obtener el estado del entrenamiento desde el servicio
+    final trainingState = Provider.of<TrainingStateService>(context, listen: true);
+    final bool isTrainingActive = trainingState.isTrainingActive;
+    
+    // Debug: imprimir el estado
+    print('🔍 AppShell - Is training active: $isTrainingActive');
 
     int currentIndex = switch (location) {
       final path when path.startsWith('/ranking') => 0,
@@ -20,21 +33,23 @@ class AppShell extends StatelessWidget {
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: (index) => _navigateToRoute(context, index),
-        selectedItemColor: Colors.orangeAccent,
-        unselectedItemColor: Colors.white70,
-        backgroundColor: const Color(0xFF0C0C27),
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.emoji_events), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.psychology_alt), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
-        ],
-      ),
+      bottomNavigationBar: isTrainingActive 
+          ? null 
+          : BottomNavigationBar(
+              currentIndex: currentIndex,
+              onTap: (index) => _navigateToRoute(context, index),
+              selectedItemColor: Colors.orangeAccent,
+              unselectedItemColor: Colors.white70,
+              backgroundColor: const Color(0xFF0C0C27),
+              type: BottomNavigationBarType.fixed,
+              items: const [
+                BottomNavigationBarItem(icon: Icon(Icons.emoji_events), label: ''),
+                BottomNavigationBarItem(icon: Icon(Icons.psychology_alt), label: ''),
+                BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+                BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: ''),
+                BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+              ],
+            ),
     );
   }
 

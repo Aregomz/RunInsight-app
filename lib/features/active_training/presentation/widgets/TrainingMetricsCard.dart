@@ -16,50 +16,72 @@ class TrainingMetricsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: const Color(0xFF1C1C2E),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildMetric('Distancia', '${distanceKm.toStringAsFixed(2)} km'),
-                _buildMetric('Ritmo', pace),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildMetric('Frecuencia', '$heartRate bpm'),
-                _buildMetric('Calorías', '$calories kcal'),
-              ],
-            ),
-          ],
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1C2E),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFFF6A00).withOpacity(0.2),
+          width: 1,
         ),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _buildCompactMetric('Distancia', '${distanceKm.toStringAsFixed(2)}', 'km', Icons.straighten)),
+          _buildDivider(),
+          Expanded(child: _buildCompactMetric('Ritmo', pace, 'min/km', Icons.speed)),
+          _buildDivider(),
+          Expanded(child: _buildCompactMetric('Frecuencia', '$heartRate', 'bpm', Icons.favorite)),
+          _buildDivider(),
+          Expanded(child: _buildCompactMetric('Calorías', '$calories', 'kcal', Icons.local_fire_department)),
+        ],
       ),
     );
   }
 
-  Widget _buildMetric(String label, String value) {
+  Widget _buildCompactMetric(String label, String value, String unit, IconData icon) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white60, fontSize: 14)),
+        Icon(
+          icon,
+          color: const Color(0xFFFF6A00),
+          size: 16,
+        ),
         const SizedBox(height: 4),
         Text(
           value,
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontSize: 16,
+          ),
+        ),
+        Text(
+          unit,
+          style: TextStyle(
+            color: Colors.grey[400],
+            fontSize: 10,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey[500],
+            fontSize: 10,
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      width: 1,
+      height: 40,
+      color: Colors.grey.withOpacity(0.3),
+      margin: const EdgeInsets.symmetric(horizontal: 8),
     );
   }
 }

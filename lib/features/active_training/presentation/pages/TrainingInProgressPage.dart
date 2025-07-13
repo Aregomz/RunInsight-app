@@ -8,6 +8,9 @@ import '../../domain/usecases/save_active_training.dart';
 import '../../data/repositories/active_training_repository_impl.dart';
 import '../../data/datasources/active_training_remote_datasource.dart';
 import '../widgets/TrainingMetricsCard.dart';
+import '../widgets/timer_widget.dart';
+import '../widgets/weather_widget.dart';
+import '../widgets/movement_alert_widget.dart';
 import '../widgets/finish_training_button.dart';
 import '../widgets/share_training_button.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +20,8 @@ import 'package:runinsight/features/home/data/datasources/weather_remote_datasou
 import 'package:runinsight/features/home/data/models/weather_response_model.dart';
 import 'package:flutter/scheduler.dart' show Ticker, TickerProviderStateMixin;
 import '../../data/services/training_data_service.dart';
+import '../../data/services/training_state_service.dart';
+import 'package:provider/provider.dart';
 
 class TrainingInProgressPage extends StatefulWidget {
   const TrainingInProgressPage({super.key});
@@ -129,6 +134,11 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
       _startTime = DateTime.now();
       _elapsed = Duration.zero;
     });
+    
+    // Activar el estado global del entrenamiento
+    final trainingState = Provider.of<TrainingStateService>(context, listen: false);
+    trainingState.startTraining();
+    
     _bloc.add(StartTraining());
     _initSensors();
     _ticker.start();
@@ -142,6 +152,96 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
     setState(() {
       _showFinishForm = true;
     });
+  }
+
+  void _cancelTraining() {
+    if (_isDisposed) return;
+    
+    // Mostrar diálogo de confirmación
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1C1C2E),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Cancelar entrenamiento',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: const Text(
+            '¿Estás seguro de que quieres cancelar el entrenamiento? Se perderán todos los datos registrados.',
+            style: TextStyle(
+              color: Colors.white70,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Continuar',
+                style: TextStyle(
+                  color: Color(0xFFFF6A00),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _confirmCancelTraining();
+              },
+              child: const Text(
+                'Cancelar',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirmCancelTraining() {
+    if (_isDisposed) return;
+    
+    // Detener sensores y timer
+    _ticker.stop();
+    _stopSensors();
+    
+    // Desactivar el estado global del entrenamiento
+    final trainingState = Provider.of<TrainingStateService>(context, listen: false);
+    trainingState.stopTraining();
+    
+    // Resetear estado
+    setState(() {
+      _trainingStarted = false;
+      _showFinishForm = false;
+      _elapsed = Duration.zero;
+      _currentSteps = 0;
+      _initialSteps = 0;
+      _distanceKm = 0.0;
+      _totalDistanceMeters = 0.0;
+      _altitude = 0.0;
+      _lastLatitude = 0.0;
+      _lastLongitude = 0.0;
+      _startTime = null;
+    });
+    
+    // Mostrar mensaje
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Entrenamiento cancelado'),
+        backgroundColor: Colors.orange,
+      ),
+    );
   }
 
   void _stopSensors() {
@@ -388,6 +488,15 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
     _notesController.dispose();
     _ticker.dispose();
     _bloc.close();
+    
+    // Desactivar el estado global del entrenamiento al salir de la página
+    try {
+      final trainingState = Provider.of<TrainingStateService>(context, listen: false);
+      trainingState.stopTraining();
+    } catch (e) {
+      // Ignorar errores si el provider no está disponible
+    }
+    
     super.dispose();
   }
 
@@ -463,6 +572,10 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
       child: BlocConsumer<ActiveTrainingBloc, ActiveTrainingState>(
         listener: (context, state) {
           if (state is ActiveTrainingSuccess) {
+            // Desactivar el estado global del entrenamiento
+            final trainingState = Provider.of<TrainingStateService>(context, listen: false);
+            trainingState.stopTraining();
+            
             // Guardar los datos del entrenamiento en el servicio
             final trainingData = {
               'time_minutes': state.timeMinutes.toString(),
@@ -526,173 +639,103 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
     return Scaffold(
       backgroundColor: const Color(0xFF0C0C27),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 16),
-                Row(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height - 
+                          MediaQuery.of(context).padding.top - 
+                          MediaQuery.of(context).padding.bottom - 32,
+              ),
+              child: IntrinsicHeight(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.circle, color: Colors.green, size: 18),
-                    SizedBox(width: 8),
-                    Text(
-                      'Entrenamiento\nen curso',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 26,
-                        height: 1.1,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                if (_trainingStarted)
-                  Text(_formatDuration(_elapsed), style: const TextStyle(color: Colors.orange, fontSize: 40, fontWeight: FontWeight.bold)),
-                if (!_trainingStarted)
-                  Text('00:00', style: const TextStyle(color: Colors.orange, fontSize: 40, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 16),
-                Text('Clima: ${_trainingStarted ? _weatherDescription : '-'}', style: const TextStyle(color: Colors.white, fontSize: 16)),
-                const SizedBox(height: 32),
-                TrainingMetricsCard(
-                  distanceKm: _trainingStarted ? (_distanceKm) : 0.0,
-                  pace: _trainingStarted ? (_distanceKm > 0 ? (_elapsed.inMinutes / _distanceKm).toStringAsFixed(2) : '0.00') : '0.00',
-                  heartRate: 0, // Puedes integrar HR real aquí
-                  calories: 0, // Puedes integrar calorías reales aquí
-                ),
-                
-                // Mensaje informativo sobre el movimiento
-                if (_trainingStarted && _totalDistanceMeters == 0.0) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.withOpacity(0.5)),
-                    ),
-                    child: Row(
+                  children: [
+                    // Header con estado y botón de cancelar
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Icon(Icons.info_outline, color: Colors.blue, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Mueve el dispositivo para detectar distancia',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
+                        // Botón de cancelar (solo cuando el entrenamiento está activo)
+                        if (_trainingStarted)
+                          IconButton(
+                            onPressed: _cancelTraining,
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.white70,
+                              size: 24,
                             ),
-                          ),
+                            tooltip: 'Cancelar entrenamiento',
+                          )
+                        else
+                          const SizedBox(width: 48), // Espacio para mantener centrado
+                        
+                        // Estado del entrenamiento
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _trainingStarted ? Icons.circle : Icons.play_circle_outline,
+                              color: _trainingStarted ? Colors.green : Colors.orange,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _trainingStarted ? 'Entrenamiento en curso' : 'Preparado para entrenar',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
                         ),
+                        
+                        // Espacio para mantener centrado
+                        const SizedBox(width: 48),
                       ],
                     ),
-                  ),
-                ],
-                if (_trainingStarted) ...[
-                  const SizedBox(height: 16),
-                  _buildDebugInfo(),
-                ],
-                const SizedBox(height: 32),
-                if (!_trainingStarted && !_showFinishForm)
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _startTraining,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: const Text(
-                        'Iniciar entrenamiento',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                    const SizedBox(height: 20),
+                    
+                    // Timer
+                    TimerWidget(
+                      elapsed: _elapsed,
+                      isTrainingStarted: _trainingStarted,
                     ),
-                  ),
-                if (_trainingStarted && !_showFinishForm)
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _finishTraining,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: const Text(
-                        'Finalizar entrenamiento',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                    const SizedBox(height: 12),
+                    
+                    // Clima
+                    WeatherWidget(
+                      weatherDescription: _weatherDescription,
+                      isTrainingStarted: _trainingStarted,
                     ),
-                  ),
-                if (_showFinishForm) ...[
-                  DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(labelText: 'Tipo de entrenamiento *'),
-                    value: _selectedTrainingType,
-                    items: trainingTypes.map((type) => DropdownMenuItem(
-                      value: type,
-                      child: Text(type),
-                    )).toList(),
-                    onChanged: (val) => setState(() => _selectedTrainingType = val),
-                    validator: (val) => val == null ? 'Obligatorio' : null,
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(labelText: 'Tipo de terreno *'),
-                    value: _selectedTerrainType,
-                    items: terrainTypes.map((type) => DropdownMenuItem(
-                      value: type,
-                      child: Text(type),
-                    )).toList(),
-                    onChanged: (val) => setState(() => _selectedTerrainType = val),
-                    validator: (val) => val == null ? 'Obligatorio' : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _notesController,
-                    decoration: const InputDecoration(labelText: 'Notas (opcional)'),
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _onSaveTraining,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: const Text(
-                        'Guardar entrenamiento',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                    const SizedBox(height: 12),
+                    
+                    // Métricas
+                    TrainingMetricsCard(
+                      distanceKm: _trainingStarted ? _distanceKm : 0.0,
+                      pace: _trainingStarted ? (_distanceKm > 0 ? (_elapsed.inMinutes / _distanceKm).toStringAsFixed(2) : '0.00') : '0.00',
+                      heartRate: 0,
+                      calories: 0,
                     ),
-                  ),
-                ],
-              ],
+                    const SizedBox(height: 12),
+                    
+                    // Alerta de movimiento
+                    MovementAlertWidget(
+                      showAlert: _trainingStarted && _totalDistanceMeters == 0.0,
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Botones
+                    if (!_trainingStarted && !_showFinishForm)
+                      _buildStartButton(),
+                    if (_trainingStarted && !_showFinishForm)
+                      _buildFinishButton(),
+                    if (_showFinishForm)
+                      _buildFinishForm(),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -702,26 +745,351 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
 
   Widget _buildDebugInfo() {
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1C1C2E),
+            Color(0xFF2A2A3E),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.grey.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF6A00).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.bug_report,
+                  color: Color(0xFFFF6A00),
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Información de Debug',
+                style: TextStyle(
+                  color: Color(0xFFFF6A00),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildDebugItem('Pasos', '$_currentSteps', Icons.directions_walk),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildDebugItem('Distancia', '${_totalDistanceMeters.toStringAsFixed(2)}m', Icons.straighten),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _buildDebugItem('Latitud', '${_lastLatitude.toStringAsFixed(6)}', Icons.location_on),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildDebugItem('Longitud', '${_lastLongitude.toStringAsFixed(6)}', Icons.location_on),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDebugItem(String label, String value, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                color: Colors.grey[400],
+                size: 12,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.grey[400],
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
+  Widget _buildStartButton() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: ElevatedButton(
+        onPressed: _startTraining,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFFF6A00),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.play_arrow, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            const Text(
+              'Iniciar entrenamiento',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFinishButton() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: ElevatedButton(
+        onPressed: _finishTraining,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.stop, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            const Text(
+              'Finalizar entrenamiento',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFinishForm() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+        color: const Color(0xFF1C1C2E),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFFF6A00).withOpacity(0.2),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Debug Info:',
-            style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 12),
+            'Detalles del entrenamiento',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
-          const SizedBox(height: 4),
-          Text('Pasos: $_currentSteps', style: const TextStyle(color: Colors.white70, fontSize: 10)),
-          Text('Distancia total: ${_totalDistanceMeters.toStringAsFixed(2)}m', style: const TextStyle(color: Colors.white70, fontSize: 10)),
-          Text('Última lat: ${_lastLatitude.toStringAsFixed(6)}', style: const TextStyle(color: Colors.white70, fontSize: 10)),
-          Text('Última lon: ${_lastLongitude.toStringAsFixed(6)}', style: const TextStyle(color: Colors.white70, fontSize: 10)),
+          const SizedBox(height: 12),
+          
+          // Tipo de entrenamiento
+          _buildCompactDropdown(
+            label: 'Tipo',
+            value: _selectedTrainingType,
+            items: trainingTypes,
+            onChanged: (val) => setState(() => _selectedTrainingType = val),
+          ),
+          const SizedBox(height: 8),
+          
+          // Tipo de terreno
+          _buildCompactDropdown(
+            label: 'Terreno',
+            value: _selectedTerrainType,
+            items: terrainTypes,
+            onChanged: (val) => setState(() => _selectedTerrainType = val),
+          ),
+          const SizedBox(height: 8),
+          
+          // Notas
+          _buildCompactTextField(
+            controller: _notesController,
+            label: 'Notas (opcional)',
+          ),
+          const SizedBox(height: 12),
+          
+          // Botón de guardar
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _onSaveTraining,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Guardar',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCompactDropdown({
+    required String label,
+    String? value,
+    required List<String> items,
+    required Function(String?) onChanged,
+  }) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 80,
+          child: Text(
+            label,
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.grey.withOpacity(0.3)),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: value,
+                items: items.map((item) => DropdownMenuItem(
+                  value: item,
+                  child: Text(
+                    item,
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )).toList(),
+                onChanged: onChanged,
+                style: const TextStyle(color: Colors.white),
+                dropdownColor: const Color(0xFF1C1C2E),
+                icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 16),
+                isExpanded: true,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompactTextField({
+    required TextEditingController controller,
+    required String label,
+  }) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 80,
+          child: Text(
+            label,
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.grey.withOpacity(0.3)),
+            ),
+            child: TextField(
+              controller: controller,
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

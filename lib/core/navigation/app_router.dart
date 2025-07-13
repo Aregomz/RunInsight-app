@@ -35,6 +35,8 @@ import 'package:runinsight/features/ranking/data/repositories/friends_ranking_re
 import 'package:runinsight/features/ranking/data/datasources/friends_ranking_remote_datasource.dart';
 import 'package:runinsight/features/ranking/data/datasources/badges_remote_datasource.dart';
 import 'package:runinsight/features/user/data/services/user_service.dart';
+import 'package:runinsight/features/active_training/data/services/training_state_service.dart';
+import 'package:provider/provider.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -73,7 +75,10 @@ class AppRouter {
         },
       ),
       ShellRoute(
-        builder: (_, __, child) => AppShell(child: child),
+        builder: (_, __, child) => ChangeNotifierProvider(
+          create: (_) => TrainingStateService(),
+          child: AppShell(child: child),
+        ),
         routes: [
           GoRoute(
             path: '/home',

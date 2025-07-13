@@ -62,5 +62,10 @@
 	<array>
 		<string>applinks:runinsight.app</string>
 	</array>
+	<!-- Permisos de cámara y galería -->
+	<key>NSCameraUsageDescription</key>
+	<string>Esta app necesita acceso a la cámara para tomar fotos y compartir tu entrenamiento</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Esta app necesita acceso a la galería para seleccionar fotos y compartir tu entrenamiento</string>
 </dict>
 </plist>
