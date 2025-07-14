@@ -106,22 +106,6 @@ class _ChatScreenViewState extends State<_ChatScreenView> {
                       icon: const Icon(Icons.delete_sweep, color: Colors.red),
                       tooltip: 'Limpiar historial',
                     ),
-                    IconButton(
-                      onPressed: () async {
-                        final repository = ChatRepositoryImpl();
-                        final messages = await repository.loadMessages();
-                        print(
-                          '🔍 PERSISTENCIA: ${messages.length} mensajes guardados',
-                        );
-                        for (var msg in messages) {
-                          print(
-                            '  - ${msg.isUser ? "USER" : "AI"}: ${msg.content}',
-                          );
-                        }
-                      },
-                      icon: const Icon(Icons.storage, color: Colors.green),
-                      tooltip: 'Ver persistencia',
-                    ),
                   ],
                 ),
                 ElevatedButton.icon(

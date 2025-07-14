@@ -11,16 +11,26 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     // Usar GoRouter para obtener la ubicación actual
     final String location = GoRouterState.of(context).uri.path;
-    
+
     // Debug: imprimir la ubicación actual
     print('🔍 AppShell - Current location: $location');
 
-    // Obtener el estado del entrenamiento desde el servicio
-    final trainingState = Provider.of<TrainingStateService>(context, listen: true);
-    final bool isTrainingActive = trainingState.isTrainingActive;
-    
-    // Debug: imprimir el estado
-    print('🔍 AppShell - Is training active: $isTrainingActive');
+    bool isTrainingActive = false;
+    bool providerAvailable = true;
+    try {
+      // Obtener el estado del entrenamiento desde el servicio
+      final trainingState = Provider.of<TrainingStateService>(
+        context,
+        listen: true,
+      );
+      isTrainingActive = trainingState.isTrainingActive;
+      // Debug: imprimir el estado
+      print('🔍 AppShell - Is training active: $isTrainingActive');
+    } catch (e) {
+      // Si el provider no existe, mostrar el menú inferior igual
+      debugPrint('⚠️ TrainingStateService no disponible en AppShell: $e');
+      providerAvailable = false;
+    }
 
     int currentIndex = switch (location) {
       final path when path.startsWith('/ranking') => 0,
@@ -33,23 +43,33 @@ class AppShell extends StatelessWidget {
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: isTrainingActive 
-          ? null 
-          : BottomNavigationBar(
-              currentIndex: currentIndex,
-              onTap: (index) => _navigateToRoute(context, index),
-              selectedItemColor: Colors.orangeAccent,
-              unselectedItemColor: Colors.white70,
-              backgroundColor: const Color(0xFF0C0C27),
-              type: BottomNavigationBarType.fixed,
-              items: const [
-                BottomNavigationBarItem(icon: Icon(Icons.emoji_events), label: ''),
-                BottomNavigationBarItem(icon: Icon(Icons.psychology_alt), label: ''),
-                BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-                BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: ''),
-                BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
-              ],
-            ),
+      bottomNavigationBar:
+          (!isTrainingActive && providerAvailable || !providerAvailable)
+              ? BottomNavigationBar(
+                currentIndex: currentIndex,
+                onTap: (index) => _navigateToRoute(context, index),
+                selectedItemColor: Colors.orangeAccent,
+                unselectedItemColor: Colors.white70,
+                backgroundColor: const Color(0xFF0C0C27),
+                type: BottomNavigationBarType.fixed,
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.emoji_events),
+                    label: '',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.psychology_alt),
+                    label: '',
+                  ),
+                  BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.bar_chart),
+                    label: '',
+                  ),
+                  BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+                ],
+              )
+              : null,
     );
   }
 

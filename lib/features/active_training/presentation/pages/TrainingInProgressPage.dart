@@ -30,7 +30,8 @@ class TrainingInProgressPage extends StatefulWidget {
   State<TrainingInProgressPage> createState() => _TrainingInProgressPageState();
 }
 
-class _TrainingInProgressPageState extends State<TrainingInProgressPage> with TickerProviderStateMixin {
+class _TrainingInProgressPageState extends State<TrainingInProgressPage>
+    with TickerProviderStateMixin {
   late ActiveTrainingBloc _bloc;
   late final TextEditingController _notesController;
   String? _selectedTrainingType;
@@ -61,12 +62,26 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
   int _gpsRestartCount = 0;
 
   static const List<String> trainingTypes = [
-    'Easy Run', 'Hard Run', 'Intervalos', 'Tempo Run', 'Recuperación',
-    'Long Run', 'Técnica de Carrera', 'Subidas', 'Fartlek', 'Descanso Activo',
+    'Easy Run',
+    'Hard Run',
+    'Intervalos',
+    'Tempo Run',
+    'Recuperación',
+    'Long Run',
+    'Técnica de Carrera',
+    'Subidas',
+    'Fartlek',
+    'Descanso Activo',
   ];
   static const List<String> terrainTypes = [
-    'Asfalto', 'Tierra', 'Césped', 'Arena', 'Pista (Tartán)',
-    'Sendero', 'Montaña', 'Cemento',
+    'Asfalto',
+    'Tierra',
+    'Césped',
+    'Arena',
+    'Pista (Tartán)',
+    'Sendero',
+    'Montaña',
+    'Cemento',
   ];
 
   @override
@@ -89,23 +104,29 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
     if (!_isDisposed && mounted) {
       setState(() {
         _elapsed = elapsed;
-        
+
         // Fallback: si no hay movimiento GPS después de 2 minutos, simular distancia mínima
-        if (_trainingStarted && _totalDistanceMeters == 0.0 && elapsed.inMinutes >= 2) {
+        if (_trainingStarted &&
+            _totalDistanceMeters == 0.0 &&
+            elapsed.inMinutes >= 2) {
           // Simular una caminata muy lenta (1 km/h) si no hay movimiento detectado
           _distanceKm = (elapsed.inMinutes * 1.0) / 60.0;
           _totalDistanceMeters = _distanceKm * 1000.0;
-          print('🔄 Fallback: Simulando distancia mínima de ${_distanceKm.toStringAsFixed(3)}km');
-          
+          print(
+            '🔄 Fallback: Simulando distancia mínima de ${_distanceKm.toStringAsFixed(3)}km',
+          );
+
           // Actualizar el bloc con datos de fallback
           try {
-            _bloc.add(UpdateTrainingData(
-              timeMinutes: elapsed.inMinutes,
-              distanceKm: _distanceKm,
-              rhythm: _distanceKm > 0 ? elapsed.inMinutes / _distanceKm : 0.0,
-              altitude: _altitude,
-              weather: _weatherDescription,
-            ));
+            _bloc.add(
+              UpdateTrainingData(
+                timeMinutes: elapsed.inMinutes,
+                distanceKm: _distanceKm,
+                rhythm: _distanceKm > 0 ? elapsed.inMinutes / _distanceKm : 0.0,
+                altitude: _altitude,
+                weather: _weatherDescription,
+              ),
+            );
           } catch (e) {
             print('⚠️ Error actualizando datos de fallback: $e');
           }
@@ -128,17 +149,20 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
 
   void _startTraining() {
     if (_isDisposed) return;
-    
+
     setState(() {
       _trainingStarted = true;
       _startTime = DateTime.now();
       _elapsed = Duration.zero;
     });
-    
+
     // Activar el estado global del entrenamiento
-    final trainingState = Provider.of<TrainingStateService>(context, listen: false);
+    final trainingState = Provider.of<TrainingStateService>(
+      context,
+      listen: false,
+    );
     trainingState.startTraining();
-    
+
     _bloc.add(StartTraining());
     _initSensors();
     _ticker.start();
@@ -146,7 +170,7 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
 
   void _finishTraining() {
     if (_isDisposed) return;
-    
+
     _ticker.stop();
     _stopSensors();
     setState(() {
@@ -156,7 +180,7 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
 
   void _cancelTraining() {
     if (_isDisposed) return;
-    
+
     // Mostrar diálogo de confirmación
     showDialog(
       context: context,
@@ -168,16 +192,11 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
           ),
           title: const Text(
             'Cancelar entrenamiento',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           content: const Text(
             '¿Estás seguro de que quieres cancelar el entrenamiento? Se perderán todos los datos registrados.',
-            style: TextStyle(
-              color: Colors.white70,
-            ),
+            style: TextStyle(color: Colors.white70),
           ),
           actions: [
             TextButton(
@@ -211,15 +230,22 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
 
   void _confirmCancelTraining() {
     if (_isDisposed) return;
-    
+
     // Detener sensores y timer
     _ticker.stop();
     _stopSensors();
-    
+
     // Desactivar el estado global del entrenamiento
-    final trainingState = Provider.of<TrainingStateService>(context, listen: false);
-    trainingState.stopTraining();
-    
+    try {
+      final trainingState = Provider.of<TrainingStateService>(
+        context,
+        listen: false,
+      );
+      trainingState.stopTraining();
+    } catch (e) {
+      // Ignorar errores si el provider no está disponible
+    }
+
     // Resetear estado
     setState(() {
       _trainingStarted = false;
@@ -234,7 +260,7 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
       _lastLongitude = 0.0;
       _startTime = null;
     });
-    
+
     // Mostrar mensaje
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -242,6 +268,11 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
         backgroundColor: Colors.orange,
       ),
     );
+
+    // Navegar al home después de cancelar
+    if (mounted) {
+      context.go('/home');
+    }
   }
 
   void _stopSensors() {
@@ -260,14 +291,14 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
 
   void _restartGPS() {
     if (_isDisposed || !mounted) return;
-    
+
     _gpsRestartCount++;
     print('🔄 Reiniciando GPS (intento $_gpsRestartCount)...');
-    
+
     try {
       _positionSubscription?.cancel();
       _positionSubscription = null;
-      
+
       _positionStream = Geolocator.getPositionStream(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.medium,
@@ -294,17 +325,18 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
   void _initSensors() async {
     try {
       print('📍 Inicializando sensores de forma segura...');
-      
+
       // Solicitar permisos de ubicación
       final permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
         print('⚠️ Permisos de ubicación denegados, usando modo básico');
         setState(() {
           _weatherDescription = 'Soleado';
         });
         return;
       }
-      
+
       // Inicializar podómetro de forma segura
       try {
         print('👟 Intentando inicializar podómetro...');
@@ -319,14 +351,17 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
         print('👟 Podómetro inicializado correctamente');
       } catch (e) {
         print('⚠️ No se pudo inicializar podómetro: $e');
-        print('⚠️ El dispositivo puede no tener sensor de pasos o permisos insuficientes');
+        print(
+          '⚠️ El dispositivo puede no tener sensor de pasos o permisos insuficientes',
+        );
       }
-      
+
       // Configurar GPS con mejor precisión y filtros
       try {
         _positionStream = Geolocator.getPositionStream(
           locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.medium, // Menos agresivo pero más estable
+            accuracy:
+                LocationAccuracy.medium, // Menos agresivo pero más estable
             distanceFilter: 3, // Actualizar cada 3 metros
             timeLimit: Duration(seconds: 300), // 5 minutos de timeout
           ),
@@ -341,11 +376,11 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
       } catch (e) {
         print('⚠️ No se pudo inicializar GPS: $e');
       }
-      
+
       setState(() {
         _weatherDescription = 'Cargando...';
       });
-      
+
       print('📍 Sensores inicializados de forma segura');
     } catch (e) {
       print('❌ Error al inicializar sensores: $e');
@@ -357,18 +392,18 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
 
   void _onStepCount(StepCount event) {
     if (_isDisposed || !mounted) return;
-    
+
     try {
       print('👟 Evento de pasos recibido: ${event.steps} pasos totales');
-      
+
       if (_initialSteps == 0) {
         _initialSteps = event.steps;
         print('👟 Pasos iniciales establecidos: $_initialSteps');
       }
-      
+
       final newSteps = event.steps - _initialSteps;
       print('👟 Cálculo: ${event.steps} - $_initialSteps = $newSteps pasos');
-      
+
       if (newSteps != _currentSteps && newSteps >= 0) {
         setState(() {
           _currentSteps = newSteps;
@@ -384,61 +419,82 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
 
   void _onPosition(Position position) async {
     if (_isDisposed || !mounted) return;
-    
+
     try {
-      print('📍 Nueva posición: ${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}');
+      print(
+        '📍 Nueva posición: ${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}',
+      );
       print('📍 Precisión: ${position.accuracy.toStringAsFixed(1)} metros');
       print('📍 Velocidad: ${position.speed.toStringAsFixed(2)} m/s');
-      
+
       // Solo procesar si la precisión es aceptable (menos de 50 metros de error)
       if (position.accuracy > 50) {
-        print('⚠️ Precisión GPS muy baja: ${position.accuracy.toStringAsFixed(1)}m, ignorando posición');
+        print(
+          '⚠️ Precisión GPS muy baja: ${position.accuracy.toStringAsFixed(1)}m, ignorando posición',
+        );
         return;
       }
-      
+
       // Procesar movimiento incluso si está quieto (para capturar la posición inicial)
       // Solo rechazar si está completamente quieto por mucho tiempo
-      if (position.speed < 0.1) { // Muy poca velocidad
+      if (position.speed < 0.1) {
+        // Muy poca velocidad
         print('⚠️ Muy poca velocidad: ${position.speed.toStringAsFixed(2)}m/s');
         // No retornar, permitir procesar la posición inicial
       }
-      
+
       if (_lastLatitude != 0.0 && _lastLongitude != 0.0) {
         final double distance = Geolocator.distanceBetween(
-          _lastLatitude, _lastLongitude, position.latitude, position.longitude);
-        
+          _lastLatitude,
+          _lastLongitude,
+          position.latitude,
+          position.longitude,
+        );
+
         // Solo agregar distancia si es razonable (no más de 200 metros por actualización)
         if (distance > 0 && distance < 200) {
           _totalDistanceMeters += distance;
-          print('📏 Distancia agregada: ${distance.toStringAsFixed(2)}m, Total: ${_totalDistanceMeters.toStringAsFixed(2)}m');
+          print(
+            '📏 Distancia agregada: ${distance.toStringAsFixed(2)}m, Total: ${_totalDistanceMeters.toStringAsFixed(2)}m',
+          );
         } else if (distance >= 200) {
-          print('⚠️ Distancia sospechosa: ${distance.toStringAsFixed(2)}m, ignorando');
+          print(
+            '⚠️ Distancia sospechosa: ${distance.toStringAsFixed(2)}m, ignorando',
+          );
         }
       } else {
         print('📍 Primera posición registrada');
       }
-      
+
       _lastLatitude = position.latitude;
       _lastLongitude = position.longitude;
       _altitude = position.altitude;
       _distanceKm = _totalDistanceMeters / 1000.0;
-      
+
       // Reiniciar contador de timeout del GPS
       _gpsRestartTimer?.cancel();
       _gpsRestartTimer = Timer(const Duration(seconds: 180), () {
         print('⏰ GPS timeout detectado, reiniciando...');
         _restartGPS();
       });
-      
+
       print('📊 Estado actual:');
-      print('   Distancia total: ${_totalDistanceMeters.toStringAsFixed(2)}m (${_distanceKm.toStringAsFixed(3)}km)');
+      print(
+        '   Distancia total: ${_totalDistanceMeters.toStringAsFixed(2)}m (${_distanceKm.toStringAsFixed(3)}km)',
+      );
       print('   Altitud: ${_altitude.toStringAsFixed(1)}m');
-      print('   Última posición: ${_lastLatitude.toStringAsFixed(6)}, ${_lastLongitude.toStringAsFixed(6)}');
-      
+      print(
+        '   Última posición: ${_lastLatitude.toStringAsFixed(6)}, ${_lastLongitude.toStringAsFixed(6)}',
+      );
+
       // Actualizar clima solo ocasionalmente para no sobrecargar la API
-      if (_weatherDatasource != null && (_distanceKm < 0.05 || _totalDistanceMeters % 1000 < 50)) {
+      if (_weatherDatasource != null &&
+          (_distanceKm < 0.05 || _totalDistanceMeters % 1000 < 50)) {
         try {
-          final weather = await _weatherDatasource!.fetchWeatherData(position.latitude, position.longitude);
+          final weather = await _weatherDatasource!.fetchWeatherData(
+            position.latitude,
+            position.longitude,
+          );
           if (!_isDisposed && mounted) {
             setState(() {
               _weatherDescription = weather.data.first.weather.description;
@@ -452,29 +508,30 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
           }
         }
       }
-      
+
       // Solo actualizar UI si hay cambios significativos
       if (!_isDisposed && mounted) {
         // Usar un debounce para evitar demasiadas actualizaciones
         _updateUI();
       }
-      
+
       // Solo actualizar el bloc si hay cambios significativos
       try {
         final int timeMinutes = _startTime != null ? _elapsed.inMinutes : 0;
         final double rhythm = _distanceKm > 0 ? timeMinutes / _distanceKm : 0.0;
-        
-        _bloc.add(UpdateTrainingData(
-          timeMinutes: timeMinutes,
-          distanceKm: _distanceKm,
-          rhythm: rhythm,
-          altitude: _altitude,
-          weather: _weatherDescription,
-        ));
+
+        _bloc.add(
+          UpdateTrainingData(
+            timeMinutes: timeMinutes,
+            distanceKm: _distanceKm,
+            rhythm: rhythm,
+            altitude: _altitude,
+            weather: _weatherDescription,
+          ),
+        );
       } catch (e) {
         print('⚠️ Error actualizando datos del entrenamiento: $e');
       }
-      
     } catch (e) {
       print('⚠️ Error procesando posición GPS: $e');
     }
@@ -488,31 +545,38 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
     _notesController.dispose();
     _ticker.dispose();
     _bloc.close();
-    
-    // Desactivar el estado global del entrenamiento al salir de la página
+
     try {
-      final trainingState = Provider.of<TrainingStateService>(context, listen: false);
+      final trainingState = Provider.of<TrainingStateService>(
+        context,
+        listen: false,
+      );
       trainingState.stopTraining();
     } catch (e) {
-      // Ignorar errores si el provider no está disponible
+      // Si el provider ya no existe, ignora el error
+      debugPrint(
+        '⚠️ TrainingStateService ya no está disponible en dispose: $e',
+      );
     }
-    
+
     super.dispose();
   }
 
   void _onSaveTraining() {
     if (_isDisposed) return;
-    
+
     if (_selectedTrainingType == null || _selectedTerrainType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona tipo de entrenamiento y terreno')),
+        const SnackBar(
+          content: Text('Selecciona tipo de entrenamiento y terreno'),
+        ),
       );
       return;
     }
-    
+
     // Calcular el tiempo real en minutos
     final realTimeMinutes = _elapsed.inMinutes;
-    
+
     // Validar que haya datos válidos
     if (realTimeMinutes == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -523,23 +587,27 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
       );
       return;
     }
-    
+
     if (_distanceKm == 0.0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('No se detectó movimiento. Asegúrate de mover el dispositivo'),
+          content: Text(
+            'No se detectó movimiento. Asegúrate de mover el dispositivo',
+          ),
           backgroundColor: Colors.orange,
         ),
       );
       return;
     }
-    
-    _bloc.add(FinishTraining(
-      trainingType: _selectedTrainingType!,
-      terrainType: _selectedTerrainType!,
-      notes: _notesController.text.isNotEmpty ? _notesController.text : null,
-      realTimeMinutes: realTimeMinutes,
-    ));
+
+    _bloc.add(
+      FinishTraining(
+        trainingType: _selectedTrainingType!,
+        terrainType: _selectedTerrainType!,
+        notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+        realTimeMinutes: realTimeMinutes,
+      ),
+    );
   }
 
   String _formatDuration(Duration d) {
@@ -550,12 +618,14 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
 
   Map<String, dynamic> _buildTrainingData() {
     final now = DateTime.now();
-    final dateStr = '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
-    
+    final dateStr =
+        '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+
     return {
       'time_minutes': _elapsed.inMinutes.toString(),
       'distance_km': _distanceKm.toString(),
-      'rhythm': (_distanceKm > 0 ? _elapsed.inMinutes / _distanceKm : 0.0).toString(),
+      'rhythm':
+          (_distanceKm > 0 ? _elapsed.inMinutes / _distanceKm : 0.0).toString(),
       'altitude': _altitude.toString(),
       'trainingType': _selectedTrainingType ?? 'Carrera',
       'terrainType': _selectedTerrainType ?? 'Pavimento',
@@ -573,9 +643,12 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
         listener: (context, state) {
           if (state is ActiveTrainingSuccess) {
             // Desactivar el estado global del entrenamiento
-            final trainingState = Provider.of<TrainingStateService>(context, listen: false);
+            final trainingState = Provider.of<TrainingStateService>(
+              context,
+              listen: false,
+            );
             trainingState.stopTraining();
-            
+
             // Guardar los datos del entrenamiento en el servicio
             final trainingData = {
               'time_minutes': state.timeMinutes.toString(),
@@ -589,10 +662,10 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
               'date': state.date,
             };
             TrainingDataService.setLastTrainingData(trainingData);
-            
+
             // Navegar a la página de resumen del entrenamiento
             context.go('/training-summary');
-            
+
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('¡Entrenamiento guardado exitosamente!'),
@@ -601,16 +674,21 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
             );
           } else if (state is ActiveTrainingFailure) {
             String errorMessage = state.message;
-            
+
             // Manejar errores específicos del backend
             if (errorMessage.contains('User not found')) {
-              errorMessage = 'Error del servidor: Usuario no encontrado. Por favor, contacta al soporte técnico.';
-            } else if (errorMessage.contains('La distancia debe ser mayor a 0.1 km')) {
-              errorMessage = 'La distancia del entrenamiento debe ser mayor a 100 metros.';
+              errorMessage =
+                  'Error del servidor: Usuario no encontrado. Por favor, contacta al soporte técnico.';
+            } else if (errorMessage.contains(
+              'La distancia debe ser mayor a 0.1 km',
+            )) {
+              errorMessage =
+                  'La distancia del entrenamiento debe ser mayor a 100 metros.';
             } else if (errorMessage.contains('Error del backend')) {
-              errorMessage = 'Error del servidor. Intenta nuevamente o contacta soporte.';
+              errorMessage =
+                  'Error del servidor. Intenta nuevamente o contacta soporte.';
             }
-            
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(errorMessage),
@@ -644,9 +722,11 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
           child: SingleChildScrollView(
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height - 
-                          MediaQuery.of(context).padding.top - 
-                          MediaQuery.of(context).padding.bottom - 32,
+                minHeight:
+                    MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom -
+                    32,
               ),
               child: IntrinsicHeight(
                 child: Column(
@@ -668,20 +748,28 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
                             tooltip: 'Cancelar entrenamiento',
                           )
                         else
-                          const SizedBox(width: 48), // Espacio para mantener centrado
-                        
+                          const SizedBox(
+                            width: 48,
+                          ), // Espacio para mantener centrado
                         // Estado del entrenamiento
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              _trainingStarted ? Icons.circle : Icons.play_circle_outline,
-                              color: _trainingStarted ? Colors.green : Colors.orange,
+                              _trainingStarted
+                                  ? Icons.circle
+                                  : Icons.play_circle_outline,
+                              color:
+                                  _trainingStarted
+                                      ? Colors.green
+                                      : Colors.orange,
                               size: 16,
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              _trainingStarted ? 'Entrenamiento en curso' : 'Preparado para entrenar',
+                              _trainingStarted
+                                  ? 'Entrenamiento en curso'
+                                  : 'Preparado para entrenar',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -690,49 +778,55 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
                             ),
                           ],
                         ),
-                        
+
                         // Espacio para mantener centrado
                         const SizedBox(width: 48),
                       ],
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Timer
                     TimerWidget(
                       elapsed: _elapsed,
                       isTrainingStarted: _trainingStarted,
                     ),
                     const SizedBox(height: 12),
-                    
+
                     // Clima
                     WeatherWidget(
                       weatherDescription: _weatherDescription,
                       isTrainingStarted: _trainingStarted,
                     ),
                     const SizedBox(height: 12),
-                    
+
                     // Métricas
                     TrainingMetricsCard(
                       distanceKm: _trainingStarted ? _distanceKm : 0.0,
-                      pace: _trainingStarted ? (_distanceKm > 0 ? (_elapsed.inMinutes / _distanceKm).toStringAsFixed(2) : '0.00') : '0.00',
+                      pace:
+                          _trainingStarted
+                              ? (_distanceKm > 0
+                                  ? (_elapsed.inMinutes / _distanceKm)
+                                      .toStringAsFixed(2)
+                                  : '0.00')
+                              : '0.00',
                       heartRate: 0,
                       calories: 0,
                     ),
                     const SizedBox(height: 12),
-                    
+
                     // Alerta de movimiento
                     MovementAlertWidget(
-                      showAlert: _trainingStarted && _totalDistanceMeters == 0.0,
+                      showAlert:
+                          _trainingStarted && _totalDistanceMeters == 0.0,
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Botones
                     if (!_trainingStarted && !_showFinishForm)
                       _buildStartButton(),
                     if (_trainingStarted && !_showFinishForm)
                       _buildFinishButton(),
-                    if (_showFinishForm)
-                      _buildFinishForm(),
+                    if (_showFinishForm) _buildFinishForm(),
                   ],
                 ),
               ),
@@ -751,10 +845,7 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1C1C2E),
-            Color(0xFF2A2A3E),
-          ],
+          colors: [Color(0xFF1C1C2E), Color(0xFF2A2A3E)],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
@@ -764,10 +855,7 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.2),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -801,11 +889,19 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
           Row(
             children: [
               Expanded(
-                child: _buildDebugItem('Pasos', '$_currentSteps', Icons.directions_walk),
+                child: _buildDebugItem(
+                  'Pasos',
+                  '$_currentSteps',
+                  Icons.directions_walk,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildDebugItem('Distancia', '${_totalDistanceMeters.toStringAsFixed(2)}m', Icons.straighten),
+                child: _buildDebugItem(
+                  'Distancia',
+                  '${_totalDistanceMeters.toStringAsFixed(2)}m',
+                  Icons.straighten,
+                ),
               ),
             ],
           ),
@@ -813,11 +909,19 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
           Row(
             children: [
               Expanded(
-                child: _buildDebugItem('Latitud', '${_lastLatitude.toStringAsFixed(6)}', Icons.location_on),
+                child: _buildDebugItem(
+                  'Latitud',
+                  '${_lastLatitude.toStringAsFixed(6)}',
+                  Icons.location_on,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildDebugItem('Longitud', '${_lastLongitude.toStringAsFixed(6)}', Icons.location_on),
+                child: _buildDebugItem(
+                  'Longitud',
+                  '${_lastLongitude.toStringAsFixed(6)}',
+                  Icons.location_on,
+                ),
               ),
             ],
           ),
@@ -838,11 +942,7 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
         children: [
           Row(
             children: [
-              Icon(
-                icon,
-                color: Colors.grey[400],
-                size: 12,
-              ),
+              Icon(icon, color: Colors.grey[400], size: 12),
               const SizedBox(width: 4),
               Text(
                 label,
@@ -867,8 +967,6 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
       ),
     );
   }
-
-
 
   Widget _buildStartButton() {
     return Container(
@@ -958,7 +1056,7 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // Tipo de entrenamiento
           _buildCompactDropdown(
             label: 'Tipo',
@@ -967,7 +1065,7 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
             onChanged: (val) => setState(() => _selectedTrainingType = val),
           ),
           const SizedBox(height: 8),
-          
+
           // Tipo de terreno
           _buildCompactDropdown(
             label: 'Terreno',
@@ -976,14 +1074,14 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
             onChanged: (val) => setState(() => _selectedTerrainType = val),
           ),
           const SizedBox(height: 8),
-          
+
           // Notas
           _buildCompactTextField(
             controller: _notesController,
             label: 'Notas (opcional)',
           ),
           const SizedBox(height: 12),
-          
+
           // Botón de guardar
           SizedBox(
             width: double.infinity,
@@ -1037,18 +1135,30 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: value,
-                items: items.map((item) => DropdownMenuItem(
-                  value: item,
-                  child: Text(
-                    item,
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                )).toList(),
+                items:
+                    items
+                        .map(
+                          (item) => DropdownMenuItem(
+                            value: item,
+                            child: Text(
+                              item,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
+                        .toList(),
                 onChanged: onChanged,
                 style: const TextStyle(color: Colors.white),
                 dropdownColor: const Color(0xFF1C1C2E),
-                icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 16),
+                icon: const Icon(
+                  Icons.arrow_drop_down,
+                  color: Colors.white,
+                  size: 16,
+                ),
                 isExpanded: true,
               ),
             ),
@@ -1084,7 +1194,10 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage> with Ti
               style: const TextStyle(color: Colors.white, fontSize: 12),
               decoration: const InputDecoration(
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 8,
+                ),
               ),
             ),
           ),

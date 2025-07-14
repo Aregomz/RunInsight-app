@@ -150,14 +150,17 @@ class ProfileView extends StatelessWidget {
                     final userId = userData['id'];
                     print('Debug: userId = $userId');
                     print('Debug: userData = $userData');
-                    
+
                     if (userId != null) {
                       try {
                         print('Debug: Attempting to navigate to /edit-profile');
-                        context.push('/edit-profile', extra: {
-                          'userId': userId.toString(),
-                          'currentUserData': userData,
-                        });
+                        context.push(
+                          '/edit-profile',
+                          extra: {
+                            'userId': userId.toString(),
+                            'currentUserData': userData,
+                          },
+                        );
                         print('Debug: Navigation successful');
                       } catch (e) {
                         print('Error en navegación: $e');
@@ -171,7 +174,9 @@ class ProfileView extends StatelessWidget {
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Error: No se pudo obtener el ID del usuario'),
+                          content: Text(
+                            'Error: No se pudo obtener el ID del usuario',
+                          ),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -200,7 +205,7 @@ class ProfileView extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Cerrar sesión
+                    // Cerrar sesión y limpiar el stack de navegación usando GoRouter
                     context.go('/');
                   },
                   style: ElevatedButton.styleFrom(
@@ -230,18 +235,18 @@ class ProfileView extends StatelessWidget {
 
   String? _formatDecimal(dynamic value) {
     if (value == null) return null;
-    
+
     if (value is num) {
       return value.toStringAsFixed(2);
     }
-    
+
     if (value is String) {
       final numValue = double.tryParse(value);
       if (numValue != null) {
         return numValue.toStringAsFixed(2);
       }
     }
-    
+
     return value.toString();
   }
 }
