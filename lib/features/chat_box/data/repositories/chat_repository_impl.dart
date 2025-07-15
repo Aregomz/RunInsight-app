@@ -1,12 +1,14 @@
 // features/chat_box/data/repositories_impl/chat_repository_impl.dart
 import 'package:runinsight/features/chat_box/domain/entities/chat_message.dart';
 import 'package:runinsight/features/chat_box/domain/repositories/chat_repository.dart';
-import '../services/gemini_service.dart';
-import '../services/chat_storage_service.dart';
+import 'package:runinsight/core/services/gemini_api_service.dart';
+import '../datasources/chat_local_datasource.dart';
 
 class ChatRepositoryImpl implements ChatRepository {
-  final GeminiService _geminiService = GeminiService();
+  final GeminiApiService geminiApiService;
   final ChatStorageService _storageService = ChatStorageService();
+
+  ChatRepositoryImpl({required this.geminiApiService});
 
   @override
   Future<List<ChatMessage>> sendMessage(String message) async {
@@ -14,7 +16,7 @@ class ChatRepositoryImpl implements ChatRepository {
       // Cargar mensajes existentes
       final existingMessages = await _storageService.loadMessages();
       print(
-        '📥 Mensajes existentes en repositorio: ${existingMessages.length}',
+        '📥 Mensajes existentes en repositorio:  [90m${existingMessages.length} [0m',
       );
 
       // Crear mensaje del usuario
@@ -40,7 +42,7 @@ class ChatRepositoryImpl implements ChatRepository {
 
       if (isFirstMessage) {
         // Para el primer mensaje, dar bienvenida personalizada
-        aiResponse = await _geminiService.generateResponse(
+        aiResponse = await geminiApiService.generateResponse(
           'Primera vez: $message',
         );
       } else {
@@ -49,7 +51,7 @@ class ChatRepositoryImpl implements ChatRepository {
             .skip(existingMessages.length > 4 ? existingMessages.length - 4 : 0)
             .map((m) => '${m.isUser ? "Usuario" : "Coach"}: ${m.content}')
             .join('\n');
-        aiResponse = await _geminiService.generateResponse(
+        aiResponse = await geminiApiService.generateResponse(
           'Contexto anterior:\n$recentMessages\n\nNuevo mensaje: $message',
         );
       }

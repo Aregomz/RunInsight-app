@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:runinsight/features/chat_box/domain/entities/chat_message.dart';
 import 'package:runinsight/features/chat_box/domain/usecases/send_message.dart';
 import 'package:runinsight/features/chat_box/data/repositories/chat_repository_impl.dart';
+import 'package:runinsight/core/services/gemini_api_service.dart';
 import '../bloc/chat_box_bloc.dart';
 import '../widgets/chat_bubble.dart';
 
@@ -14,7 +15,7 @@ class ChatScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) {
-        final repository = ChatRepositoryImpl();
+        final repository = ChatRepositoryImpl(geminiApiService: GeminiApiService());
         return ChatBloc(
           sendMessage: SendMessageUseCase(repository),
           repository: repository,

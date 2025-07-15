@@ -1,41 +1,27 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/chat_message.dart';
+import '../models/chat_message_model.dart';
 
 class ChatStorageService {
-  static const String _chatKey =
-      'chat_messages_v2'; // Cambio de key para evitar conflictos
+  static const String _chatKey = 'chat_messages_v2';
 
   // Guardar mensajes en el almacenamiento local
   Future<void> saveMessages(List<ChatMessage> messages) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final messagesJson =
-          messages
-              .map(
-                (msg) => {
-                  'id': msg.id,
-                  'content': msg.content,
-                  'isUser': msg.isUser,
-                  'timestamp': msg.timestamp.toIso8601String(),
-                },
-              )
-              .toList();
-
+          messages.map((msg) => ChatMessageModel.fromEntity(msg).toJson()).toList();
       final jsonString = jsonEncode(messagesJson);
       final success = await prefs.setString(_chatKey, jsonString);
-      print('💾 SAVE: ${messages.length} messages, success: $success');
-
-      // Verificar que se guardó correctamente
+      print('💾 SAVE: \x1B[90m${messages.length}\x1B[0m messages, success: $success');
       if (success) {
         final savedMessages = await loadMessages();
-        print(
-          '✅ VERIFICATION: ${savedMessages.length} messages confirmed saved',
-        );
+        print('✅ VERIFICATION: \x1B[90m${savedMessages.length}\x1B[0m messages confirmed saved');
       }
     } catch (e) {
       print('❌ SAVE ERROR: $e');
-      rethrow; // Re-lanzar el error para que se maneje en el repositorio
+      rethrow;
     }
   }
 
@@ -44,48 +30,28 @@ class ChatStorageService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final messagesString = prefs.getString(_chatKey);
-
-      print(
-        '🔍 LOAD: Key: $_chatKey, Raw data length: ${messagesString?.length ?? 0}',
-      );
-
+      print('🔍 LOAD: Key: $_chatKey, Raw data length: \x1B[90m${messagesString?.length ?? 0}\x1B[0m');
       if (messagesString == null || messagesString.isEmpty) {
         print('📭 NO SAVED MESSAGES');
         return [];
       }
-
-      // Verificar que el JSON sea válido
       if (!messagesString.startsWith('[') || !messagesString.endsWith(']')) {
         print('❌ LOAD ERROR: Invalid JSON format');
         return [];
       }
-
       final messagesJson = jsonDecode(messagesString) as List;
       final messages = <ChatMessage>[];
-
       for (int i = 0; i < messagesJson.length; i++) {
         try {
-          final json = messagesJson[i] as Map<String, dynamic>;
-          final message = ChatMessage(
-            id: json['id'] ?? '',
-            content: json['content'] ?? '',
-            isUser: json['isUser'] ?? false,
-            timestamp: DateTime.parse(
-              json['timestamp'] ?? DateTime.now().toIso8601String(),
-            ),
-          );
-          messages.add(message);
+          final model = ChatMessageModel.fromJson(messagesJson[i]);
+          messages.add(model.toEntity());
         } catch (e) {
           print('⚠️ LOAD WARNING: Error parsing message $i: $e');
-          // Continuar con el siguiente mensaje
         }
       }
-
-      print('📥 LOADED: ${messages.length} messages');
+      print('📥 LOADED: \x1B[90m${messages.length}\x1B[0m messages');
       for (var msg in messages) {
-        print(
-          '  - ${msg.isUser ? "USER" : "AI"}: ${msg.content.substring(0, msg.content.length > 30 ? 30 : msg.content.length)}...',
-        );
+        print('  - ${msg.isUser ? "USER" : "AI"}: ${msg.content.substring(0, msg.content.length > 30 ? 30 : msg.content.length)}...');
       }
       return messages;
     } catch (e) {
@@ -108,9 +74,7 @@ class ChatStorageService {
   // Agregar un mensaje y guardar inmediatamente
   Future<void> addMessage(ChatMessage message) async {
     try {
-      print(
-        '➕ ADDING: ${message.content.substring(0, message.content.length > 30 ? 30 : message.content.length)}...',
-      );
+      print('➕ ADDING: ${message.content.substring(0, message.content.length > 30 ? 30 : message.content.length)}...');
       final messages = await loadMessages();
       messages.add(message);
       await saveMessages(messages);
@@ -128,12 +92,10 @@ class ChatStorageService {
       print('🔍 DEBUG: Key: $_chatKey');
       print('🔍 DEBUG: Raw data length: ${messagesString?.length ?? 0}');
       if (messagesString != null) {
-        print(
-          '🔍 DEBUG: Raw data: ${messagesString.substring(0, messagesString.length > 200 ? 200 : messagesString.length)}...',
-        );
+        print('🔍 DEBUG: Raw data: ${messagesString.substring(0, messagesString.length > 200 ? 200 : messagesString.length)}...');
       }
     } catch (e) {
       print('❌ DEBUG ERROR: $e');
     }
   }
-}
+} 

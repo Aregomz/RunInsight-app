@@ -32,20 +32,6 @@ class FriendsRankingRepositoryImpl implements RankingRepository {
           )
         ).toList();
 
-        // Agregar al usuario actual al ranking
-        final currentUserData = await UserService.getCurrentUser();
-        if (currentUserData.isNotEmpty) {
-          final currentUser = RankingUserEntity(
-            id: currentUserData['id'].toString(),
-            name: currentUserData['username'] ?? 'Tú',
-            totalKm: (currentUserData['stats']?['km_total'] as num?)?.toDouble() ?? 0.0,
-            trainings: currentUserData['stats']?['training_counter'] as int? ?? 0,
-          );
-          
-          // Agregar el usuario actual a la lista
-          friends.add(currentUser);
-        }
-
         // Ordenar por promedio de km por entrenamiento y luego por número de entrenamientos
         friends.sort((a, b) {
           final aRatio = a.avgKmPerTraining;

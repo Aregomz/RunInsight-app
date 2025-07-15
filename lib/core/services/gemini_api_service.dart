@@ -1,17 +1,17 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:runinsight/core/config/api_config.dart';
 
-class GeminiService {
+class GeminiApiService {
   static const String _apiKey = ApiConfig.geminiApiKey;
   late final GenerativeModel _model;
 
-  GeminiService() {
+  GeminiApiService() {
     try {
       print(
-        '🤖 Gemini: Inicializando modelo con API key: ${_apiKey.substring(0, 10)}...',
+        '🤖 Gemini: Inicializando modelo con API key:  [90m${_apiKey.substring(0, 10)}...\u001b[0m',
       );
       _model = GenerativeModel(
-        model: 'gemini-1.5-flash', // Cambio a modelo más estable
+        model: 'gemini-1.5-flash',
         apiKey: _apiKey,
         generationConfig: GenerationConfig(
           temperature: 0.7,
@@ -87,11 +87,11 @@ Mensaje del usuario: $userMessage
 
   String _cleanResponse(String text) {
     return text
-        .replaceAll('*', '') // Eliminar asteriscos
-        .replaceAll('**', '') // Eliminar dobles asteriscos
-        .replaceAll('***', '') // Eliminar triples asteriscos
-        .replaceAll('`', '') // Eliminar backticks
-        .replaceAll('```', '') // Eliminar bloques de código
-        .trim(); // Eliminar espacios extra al inicio y final
+        .replaceAll('*', '')
+        .replaceAll('**', '')
+        .replaceAll('***', '')
+        .replaceAll('`', '')
+        .replaceAll('```', '')
+        .trim();
   }
-}
+} 

@@ -5,6 +5,7 @@ class UserRankingPosition extends StatelessWidget {
   final String name;
   final double km;
   final int workouts;
+  final Color? highlightColor;
 
   const UserRankingPosition({
     super.key,
@@ -12,24 +13,29 @@ class UserRankingPosition extends StatelessWidget {
     required this.name,
     required this.km,
     required this.workouts,
+    this.highlightColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final Color borderColor = highlightColor ?? const Color(0xFFFF6A00);
+    final Color bgColor = (highlightColor != null ? highlightColor!.withOpacity(0.15) : const Color(0xFF2B170B));
+    final Color numberColor = highlightColor ?? const Color(0xFFFF6A00);
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF2B170B),
+        color: bgColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFF6A00), width: 2),
+        border: Border.all(color: borderColor, width: 2),
       ),
       child: Row(
         children: [
           Text(
             '#$position',
-            style: const TextStyle(
-              color: Color(0xFFFF6A00),
+            style: TextStyle(
+              color: numberColor,
               fontWeight: FontWeight.w900,
               fontSize: 28,
             ),

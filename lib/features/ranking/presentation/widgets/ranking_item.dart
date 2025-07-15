@@ -7,6 +7,7 @@ class RankingItem extends StatelessWidget {
   final int workouts;
   final bool isCurrentUser;
   final bool isTop4;
+  final Color? highlightColor;
 
   const RankingItem({
     super.key,
@@ -16,18 +17,19 @@ class RankingItem extends StatelessWidget {
     required this.workouts,
     this.isCurrentUser = false,
     this.isTop4 = false,
+    this.highlightColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final Color borderColor = isCurrentUser
-        ? const Color(0xFFFF6A00)
+        ? (highlightColor ?? const Color(0xFFFF6A00))
         : Colors.grey[400]!;
     final Color bgColor = isCurrentUser
-        ? const Color(0xFF2B170B)
+        ? (highlightColor != null ? highlightColor!.withOpacity(0.15) : const Color(0xFF2B170B))
         : Colors.transparent;
     final Color numberColor = isCurrentUser || isTop4
-        ? const Color(0xFFFF6A00)
+        ? (highlightColor ?? const Color(0xFFFF6A00))
         : Colors.grey[400]!;
 
     return Container(

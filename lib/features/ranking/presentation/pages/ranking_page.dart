@@ -292,10 +292,11 @@ class _RankingPageState extends State<RankingPage> {
   }
 
   Widget _buildLoadedState(BuildContext context, RankingLoaded state) {
-    // Convertir entidades a RankingUser
+    // Obtener el ID del usuario actual
+    final currentUserId = UserService.getUserId()?.toString();
+    // Convertir entidades a RankingUser usando solo la info del backend
     final List<RankingUser> users = state.entries.map((entity) {
-      final isCurrentUser = entity.id == state.userId;
-      return entity.toRankingUser(isCurrentUser: isCurrentUser);
+      return entity.toRankingUser(isCurrentUser: entity.id == currentUserId);
     }).toList();
 
     // Si no hay amigos, mostrar mensaje
@@ -356,6 +357,7 @@ class _RankingPageState extends State<RankingPage> {
                               workouts: users[i].workouts,
                               isCurrentUser: users[i].isCurrentUser,
                               isTop4: true,
+                              highlightColor: users[i].isCurrentUser ? const Color(0xFFFF6A00) : null,
                             );
                           } else if (!userInTop4 && i == userIndex) {
                             // Solo muestra la posición del usuario fuera del top 4
@@ -364,6 +366,7 @@ class _RankingPageState extends State<RankingPage> {
                               name: users[i].name,
                               km: users[i].km,
                               workouts: users[i].workouts,
+                              highlightColor: users[i].isCurrentUser ? const Color(0xFFFF6A00) : null,
                             );
                           } else {
                             return const SizedBox.shrink();
