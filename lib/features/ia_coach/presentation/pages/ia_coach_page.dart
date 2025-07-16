@@ -23,46 +23,55 @@ class IACoachPage extends StatelessWidget {
         backgroundColor: const Color(0xFF0C0C27),
         foregroundColor: Colors.white,
       ),
-      backgroundColor: const Color(0xFF0C0C27),
-      body: BlocProvider(
-        create: (_) => DependencyInjection.getIaCoachBloc(),
-        child: BlocBuilder<IaCoachBloc, IaCoachState>(
-          builder: (context, state) {
-            if (state is IaCoachInitial) {
-              return Center(
-                child: _AnimatedFuturisticButton(
-                  onPressed: () {
-                    context.read<IaCoachBloc>().add(
-                          IaCoachRequested(
-                            userStats: userStats,
-                            lastTrainings: lastTrainings,
-                          ),
-                        );
-                  },
-                ),
-              );
-            } else if (state is IaCoachLoading) {
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: const [
-                  Spacer(),
-                  _FuturisticLoader(),
-                  SizedBox(height: 24),
-                  _BlinkingText(),
-                  Spacer(),
-                ],
-              );
-            } else if (state is IaCoachLoaded) {
-              return ListView(
-                padding: const EdgeInsets.all(16),
-                children: state.predictions.map((pred) => IACoachPredictionCard(prediction: pred)).toList(),
-              );
-            } else if (state is IaCoachError) {
-              return Center(child: Text('Error: ${state.message}', style: const TextStyle(color: Colors.red)));
-            }
-            return const SizedBox.shrink();
-          },
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF050510), Color(0xFF0A0A20), Color(0xFF0C0C27)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: BlocProvider(
+          create: (_) => DependencyInjection.getIaCoachBloc(),
+          child: BlocBuilder<IaCoachBloc, IaCoachState>(
+            builder: (context, state) {
+              if (state is IaCoachInitial) {
+                return Center(
+                  child: _AnimatedFuturisticButton(
+                    onPressed: () {
+                      context.read<IaCoachBloc>().add(
+                            IaCoachRequested(
+                              userStats: userStats,
+                              lastTrainings: lastTrainings,
+                            ),
+                          );
+                    },
+                  ),
+                );
+              } else if (state is IaCoachLoading) {
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: const [
+                    Spacer(),
+                    _FuturisticLoader(),
+                    SizedBox(height: 24),
+                    _BlinkingText(),
+                    Spacer(),
+                  ],
+                );
+              } else if (state is IaCoachLoaded) {
+                return ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: state.predictions.map((pred) => IACoachPredictionCard(prediction: pred)).toList(),
+                );
+              } else if (state is IaCoachError) {
+                return Center(child: Text('Error: ${state.message}', style: const TextStyle(color: Colors.red)));
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         ),
       ),
     );

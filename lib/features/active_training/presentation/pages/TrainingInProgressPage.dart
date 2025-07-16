@@ -725,119 +725,128 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage>
 
   Widget _buildTrainingUI(ActiveTrainingState state) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0C27),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-          child: SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight:
-                    MediaQuery.of(context).size.height -
-                    MediaQuery.of(context).padding.top -
-                    MediaQuery.of(context).padding.bottom -
-                    32,
-              ),
-              child: IntrinsicHeight(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Header con estado y botón de cancelar
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Botón de cancelar (solo cuando el entrenamiento está activo)
-                        if (_trainingStarted)
-                          IconButton(
-                            onPressed: _cancelTraining,
-                            icon: const Icon(
-                              Icons.close,
-                              color: Colors.white70,
-                              size: 24,
-                            ),
-                            tooltip: 'Cancelar entrenamiento',
-                          )
-                        else
-                          const SizedBox(
-                            width: 48,
-                          ), // Espacio para mantener centrado
-                        // Estado del entrenamiento
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              _trainingStarted
-                                  ? Icons.circle
-                                  : Icons.play_circle_outline,
-                              color:
-                                  _trainingStarted
-                                      ? Colors.green
-                                      : Colors.orange,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _trainingStarted
-                                  ? 'Entrenamiento en curso'
-                                  : 'Preparado para entrenar',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF050510), Color(0xFF0A0A20), Color(0xFF0C0C27)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight:
+                      MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top -
+                      MediaQuery.of(context).padding.bottom -
+                      32,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Header con estado y botón de cancelar
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Botón de cancelar (solo cuando el entrenamiento está activo)
+                          if (_trainingStarted)
+                            IconButton(
+                              onPressed: _cancelTraining,
+                              icon: const Icon(
+                                Icons.close,
+                                color: Colors.white70,
+                                size: 24,
                               ),
-                            ),
-                          ],
-                        ),
+                              tooltip: 'Cancelar entrenamiento',
+                            )
+                          else
+                            const SizedBox(
+                              width: 48,
+                            ), // Espacio para mantener centrado
+                          // Estado del entrenamiento
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                _trainingStarted
+                                    ? Icons.circle
+                                    : Icons.play_circle_outline,
+                                color:
+                                    _trainingStarted
+                                        ? Colors.green
+                                        : Colors.orange,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _trainingStarted
+                                    ? 'Entrenamiento en curso'
+                                    : 'Preparado para entrenar',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ],
+                          ),
 
-                        // Espacio para mantener centrado
-                        const SizedBox(width: 48),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
+                          // Espacio para mantener centrado
+                          const SizedBox(width: 48),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
 
-                    // Timer
-                    TimerWidget(
-                      elapsed: _elapsed,
-                      isTrainingStarted: _trainingStarted,
-                    ),
-                    const SizedBox(height: 12),
+                      // Timer
+                      TimerWidget(
+                        elapsed: _elapsed,
+                        isTrainingStarted: _trainingStarted,
+                      ),
+                      const SizedBox(height: 12),
 
-                    // Clima
-                    WeatherWidget(
-                      weatherDescription: _weatherDescription,
-                      isTrainingStarted: _trainingStarted,
-                    ),
-                    const SizedBox(height: 12),
+                      // Clima
+                      WeatherWidget(
+                        weatherDescription: _weatherDescription,
+                        isTrainingStarted: _trainingStarted,
+                      ),
+                      const SizedBox(height: 12),
 
-                    // Métricas
-                    TrainingMetricsCard(
-                      distanceKm: _trainingStarted ? _distanceKm : 0.0,
-                      pace:
-                          _trainingStarted
-                              ? (_distanceKm > 0
-                                  ? (_elapsed.inMinutes / _distanceKm)
-                                      .toStringAsFixed(2)
-                                  : '0.00')
-                              : '0.00',
-                      heartRate: 0,
-                      calories: 0,
-                    ),
-                    const SizedBox(height: 12),
+                      // Métricas
+                      TrainingMetricsCard(
+                        distanceKm: _trainingStarted ? _distanceKm : 0.0,
+                        pace:
+                            _trainingStarted
+                                ? (_distanceKm > 0
+                                    ? (_elapsed.inMinutes / _distanceKm)
+                                        .toStringAsFixed(2)
+                                    : '0.00')
+                                : '0.00',
+                        heartRate: 0,
+                        calories: 0,
+                      ),
+                      const SizedBox(height: 12),
 
-                    // Alerta de movimiento
-                    MovementAlertWidget(
-                      showAlert:
-                          _trainingStarted && _totalDistanceMeters == 0.0,
-                    ),
-                    const SizedBox(height: 20),
+                      // Alerta de movimiento
+                      MovementAlertWidget(
+                        showAlert:
+                            _trainingStarted && _totalDistanceMeters == 0.0,
+                      ),
+                      const SizedBox(height: 20),
 
-                    // Botones
-                    if (!_trainingStarted && !_showFinishForm)
-                      _buildStartButton(),
-                    if (_trainingStarted && !_showFinishForm)
-                      _buildFinishButton(),
-                    if (_showFinishForm) _buildFinishForm(),
-                  ],
+                      // Botones
+                      if (!_trainingStarted && !_showFinishForm)
+                        _buildStartButton(),
+                      if (_trainingStarted && !_showFinishForm)
+                        _buildFinishButton(),
+                      if (_showFinishForm) _buildFinishForm(),
+                    ],
+                  ),
                 ),
               ),
             ),
