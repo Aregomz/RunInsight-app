@@ -103,17 +103,7 @@ class AppRouter {
                 BlocProvider<UserBloc>(
                   create: (_) => UserBloc()..add(const LoadCurrentUser()),
                 ),
-                BlocProvider<TrainingsBloc>(
-                  create: (_) => TrainingsBloc(
-                    getUserTrainings: GetUserTrainings(
-                      TrainingsRepositoryImpl(
-                        remoteDataSource: TrainingsRemoteDataSourceImpl(
-                          dio: DioClient.instance,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                // Removido TrainingsBloc duplicado - se usa el de AppShell
               ],
               child: const HomePage(),
             ),
@@ -169,18 +159,7 @@ class AppRouter {
           GoRoute(path: '/ranking', builder: (_, __) => const RankingPage()),
           GoRoute(
             path: '/trainings',
-            builder: (_, __) => BlocProvider(
-              create: (_) => TrainingsBloc(
-                getUserTrainings: GetUserTrainings(
-                  TrainingsRepositoryImpl(
-                    remoteDataSource: TrainingsRemoteDataSourceImpl(
-                      dio: DioClient.instance,
-                    ),
-                  ),
-                ),
-              ),
-              child: const TrainingsPage(),
-            ),
+            builder: (_, __) => const TrainingsPage(),
           ),
           GoRoute(
             path: '/training_in_progress',

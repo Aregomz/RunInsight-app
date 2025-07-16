@@ -63,6 +63,11 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage>
   Timer? _uiUpdateTimer;
   Timer? _gpsRestartTimer;
   int _gpsRestartCount = 0;
+  
+  // Variables para BPM y calorías
+  int _calculatedBPM = 0;
+  int _calculatedCalories = 0;
+  Map<String, dynamic>? _userData;
 
   static const List<String> trainingTypes = [
     'Easy Run',
@@ -100,7 +105,115 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage>
     _notesController = TextEditingController();
     _weatherDatasource = WeatherRemoteDatasource();
     _ticker = createTicker(_onTick);
+    // Cargar datos del usuario para cálculos
+    _loadUserData();
     // No iniciar sensores ni timer hasta que el usuario presione 'Iniciar entrenamiento'
+  }
+
+  // Cargar datos del usuario para cálculos de BPM y calorías
+  Future<void> _loadUserData() async {
+    try {
+      _userData = await UserService.getCurrentUser();
+      print('✅ Datos del usuario cargados para cálculos: $_userData');
+    } catch (e) {
+      print('⚠️ No se pudieron cargar datos del usuario: $e');
+      // Usar valores por defecto
+      _userData = {
+        'weight': 70.0, // kg
+        'height': 170.0, // cm
+        'age': 30, // años
+        'gender': 'male', // o 'female'
+      };
+    }
+  }
+
+  // Calcular BPM basado en la intensidad del ejercicio
+  int _calculateBPM(double distanceKm, double rhythm, int timeMinutes) {
+    if (distanceKm <= 0 || timeMinutes <= 0) return 0;
+    
+    // Fórmula: BPM = Frecuencia cardíaca en reposo + (Intensidad * Factor de esfuerzo)
+    // Frecuencia cardíaca en reposo promedio: 60-100 BPM
+    final restingHR = 70; // BPM en reposo
+    
+    // Calcular intensidad basada en el ritmo (min/km)
+    // Ritmo más bajo = mayor intensidad = mayor BPM
+    double intensity = 0.0;
+    if (rhythm <= 4.0) {
+      intensity = 0.9; // Muy alta intensidad (sprint)
+    } else if (rhythm <= 5.5) {
+      intensity = 0.8; // Alta intensidad (carrera rápida)
+    } else if (rhythm <= 7.0) {
+      intensity = 0.7; // Intensidad moderada-alta (carrera)
+    } else if (rhythm <= 9.0) {
+      intensity = 0.6; // Intensidad moderada (trote)
+    } else {
+      intensity = 0.5; // Baja intensidad (caminata)
+    }
+    
+    // Factor de esfuerzo basado en la duración
+    double effortFactor = 1.0;
+    if (timeMinutes > 60) {
+      effortFactor = 1.2; // Fatiga por duración
+    } else if (timeMinutes > 30) {
+      effortFactor = 1.1;
+    }
+    
+    // Calcular BPM final
+    final maxHR = 220 - (_userData?['age'] ?? 30); // Fórmula de Karvonen
+    final targetHR = restingHR + (intensity * (maxHR - restingHR) * effortFactor);
+    
+    return targetHR.round();
+  }
+
+  // Calcular calorías quemadas
+  int _calculateCalories(double distanceKm, double rhythm, int timeMinutes) {
+    if (distanceKm <= 0 || timeMinutes <= 0) return 0;
+    
+    // Obtener datos del usuario
+    final weight = (_userData?['weight'] ?? 70.0).toDouble(); // kg
+    final height = (_userData?['height'] ?? 170.0).toDouble(); // cm
+    final age = (_userData?['age'] ?? 30).toInt();
+    final gender = _userData?['gender'] ?? 'male';
+    
+    // Calcular MET (Metabolic Equivalent of Task) basado en el ritmo
+    double met = 0.0;
+    if (rhythm <= 4.0) {
+      met = 23.0; // Sprint (> 15 km/h)
+    } else if (rhythm <= 5.5) {
+      met = 19.0; // Carrera rápida (10-15 km/h)
+    } else if (rhythm <= 7.0) {
+      met = 15.0; // Carrera (8-10 km/h)
+    } else if (rhythm <= 9.0) {
+      met = 11.0; // Trote (6-8 km/h)
+    } else {
+      met = 8.0; // Caminata rápida (5-6 km/h)
+    }
+    
+    // Fórmula de calorías: Calorías = MET * Peso (kg) * Tiempo (horas)
+    final timeHours = timeMinutes / 60.0;
+    final calories = met * weight * timeHours;
+    
+    // Ajustar por género (las mujeres suelen quemar menos calorías)
+    final adjustedCalories = gender == 'female' ? calories * 0.9 : calories;
+    
+    return adjustedCalories.round();
+  }
+
+  // Actualizar cálculos de BPM y calorías
+  void _updateCalculations() {
+    if (_trainingStarted && _distanceKm > 0) {
+      final timeMinutes = _elapsed.inMinutes;
+      final rhythm = _distanceKm > 0 ? timeMinutes / _distanceKm : 0.0;
+      
+      _calculatedBPM = _calculateBPM(_distanceKm, rhythm, timeMinutes);
+      _calculatedCalories = _calculateCalories(_distanceKm, rhythm, timeMinutes);
+      
+      print('💓 BPM calculado: $_calculatedBPM');
+      print('🔥 Calorías calculadas: $_calculatedCalories');
+    } else {
+      _calculatedBPM = 0;
+      _calculatedCalories = 0;
+    }
   }
 
   void _onTick(Duration elapsed) {
@@ -134,6 +247,9 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage>
             print('⚠️ Error actualizando datos de fallback: $e');
           }
         }
+        
+        // Actualizar cálculos de BPM y calorías
+        _updateCalculations();
       });
     }
   }
@@ -145,6 +261,7 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage>
       if (!_isDisposed && mounted) {
         setState(() {
           // Actualizar solo los valores que han cambiado
+          _updateCalculations();
         });
       }
     });
@@ -490,6 +607,9 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage>
         '   Última posición: ${_lastLatitude.toStringAsFixed(6)}, ${_lastLongitude.toStringAsFixed(6)}',
       );
 
+      // Actualizar cálculos de BPM y calorías
+      _updateCalculations();
+
       // Actualizar clima solo ocasionalmente para no sobrecargar la API
       if (_weatherDatasource != null &&
           (_distanceKm < 0.05 || _totalDistanceMeters % 1000 < 50)) {
@@ -827,8 +947,8 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage>
                                         .toStringAsFixed(2)
                                     : '0.00')
                                 : '0.00',
-                        heartRate: 0,
-                        calories: 0,
+                        heartRate: _calculatedBPM,
+                        calories: _calculatedCalories,
                       ),
                       const SizedBox(height: 12),
 

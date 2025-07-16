@@ -19,7 +19,8 @@ class _TrainingsPageState extends State<TrainingsPage> {
   @override
   void initState() {
     super.initState();
-    _loadTrainings();
+    // No cargar automáticamente para evitar duplicados
+    // Los entrenamientos se cargarán desde HomePage o cuando el usuario haga refresh
   }
 
   void _loadTrainings() {
@@ -71,6 +72,11 @@ class _TrainingsPageState extends State<TrainingsPage> {
                   // Los errores se manejan en la UI principal
                 },
                 builder: (context, state) {
+                  // Cargar entrenamientos solo si el estado es inicial
+                  if (state is TrainingsInitial) {
+                    _loadTrainings();
+                  }
+                  
                   if (state is TrainingsLoading) {
                     return const Center(
                       child: Column(

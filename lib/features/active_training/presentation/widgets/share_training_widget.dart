@@ -25,6 +25,13 @@ class _ShareTrainingWidgetState extends State<ShareTrainingWidget> {
   final ImagePicker _picker = ImagePicker();
   File? _selectedImage;
   bool _isProcessing = false;
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +134,8 @@ class _ShareTrainingWidgetState extends State<ShareTrainingWidget> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
+    if (_isDisposed || !mounted) return;
+    
     try {
       final XFile? image = await _picker.pickImage(
         source: source,
@@ -135,137 +144,164 @@ class _ShareTrainingWidgetState extends State<ShareTrainingWidget> {
         imageQuality: 85,
       );
 
-      if (image == null) {
-        // El usuario canceló la selección, no hacer nada
+      if (image == null || _isDisposed || !mounted) {
+        // El usuario canceló la selección o el widget se destruyó, no hacer nada
         return;
       }
 
-      setState(() {
-        _selectedImage = File(image.path);
-      });
-      
-      // Mostrar preview y opciones de compartir
-      _showPreviewDialog();
+      if (mounted) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+        
+        // Mostrar preview y opciones de compartir
+        _showPreviewDialog();
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al seleccionar imagen: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al seleccionar imagen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
   void _showPreviewDialog() {
+    if (_isDisposed || !mounted) return;
+    
     showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            width: double.infinity,
-            height: MediaQuery.of(context).size.height * 0.8,
-            decoration: BoxDecoration(
-              color: const Color(0xFF1C1C2E),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Vista Previa',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.close, color: Colors.white),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Preview del contenido
-                Expanded(
-                  child: Padding(
+        return PopScope(
+          canPop: true,
+          onPopInvoked: (didPop) {
+            // Limpiar la imagen seleccionada cuando se cierra el diálogo
+            if (mounted && !_isDisposed) {
+              setState(() {
+                _selectedImage = null;
+              });
+            }
+          },
+          child: Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              width: double.infinity,
+              height: MediaQuery.of(context).size.height * 0.8,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1C1C2E),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  // Header
+                  Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Screenshot(
-                      controller: _screenshotController,
-                      child: _buildShareableContent(),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Vista Previa',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            if (mounted && !_isDisposed) {
+                              setState(() {
+                                _selectedImage = null;
+                              });
+                            }
+                          },
+                          icon: const Icon(Icons.close, color: Colors.white),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                
-                // Botones de acción
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _isProcessing ? null : () {
-                            Navigator.of(context).pop();
-                            setState(() {
-                              _selectedImage = null;
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'Cancelar',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                  
+                  // Preview del contenido
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Screenshot(
+                        controller: _screenshotController,
+                        child: _buildShareableContent(),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _isProcessing ? null : _shareImage,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF6A00),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: _isProcessing
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text(
-                                  'Compartir',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                  
+                  // Botones de acción
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _isProcessing ? null : () {
+                              Navigator.of(context).pop();
+                              if (mounted && !_isDisposed) {
+                                setState(() {
+                                  _selectedImage = null;
+                                });
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Cancelar',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _isProcessing ? null : _shareImage,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFF6A00),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: _isProcessing
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Compartir',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -274,6 +310,10 @@ class _ShareTrainingWidgetState extends State<ShareTrainingWidget> {
   }
 
   Widget _buildShareableContent() {
+    if (_isDisposed || !mounted) {
+      return const SizedBox.shrink();
+    }
+    
     return Container(
       width: double.infinity,
       height: double.infinity,
@@ -284,13 +324,24 @@ class _ShareTrainingWidgetState extends State<ShareTrainingWidget> {
       child: Stack(
         children: [
           // Imagen de fondo
-          if (_selectedImage != null)
+          if (_selectedImage != null && _selectedImage!.existsSync())
             Positioned.fill(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.file(
                   _selectedImage!,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    // Si hay error al cargar la imagen, mostrar un placeholder
+                    return Container(
+                      color: Colors.grey[800],
+                      child: const Icon(
+                        Icons.image_not_supported,
+                        color: Colors.white54,
+                        size: 48,
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -396,6 +447,8 @@ class _ShareTrainingWidgetState extends State<ShareTrainingWidget> {
   }
 
   Future<void> _shareImage() async {
+    if (_isDisposed || !mounted) return;
+    
     setState(() {
       _isProcessing = true;
     });
@@ -404,13 +457,16 @@ class _ShareTrainingWidgetState extends State<ShareTrainingWidget> {
       // Capturar la imagen
       final Uint8List? imageBytes = await _screenshotController.capture();
       
-      if (imageBytes == null) {
+      if (imageBytes == null || _isDisposed || !mounted) {
         // El usuario canceló o hubo error, no hacer nada
-        setState(() {
-          _isProcessing = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isProcessing = false;
+          });
+        }
         return;
       }
+      
       // Guardar temporalmente la imagen
       final directory = await getTemporaryDirectory();
       final imagePath = '${directory.path}/training_share_${DateTime.now().millisecondsSinceEpoch}.png';
@@ -424,22 +480,31 @@ class _ShareTrainingWidgetState extends State<ShareTrainingWidget> {
       );
       
       // Limpiar archivo temporal
-      await imageFile.delete();
+      try {
+        await imageFile.delete();
+      } catch (e) {
+        // Ignorar errores al eliminar archivo temporal
+        print('Warning: No se pudo eliminar archivo temporal: $e');
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al compartir: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      setState(() {
-        _isProcessing = false;
-      });
-      
-      // Cerrar el diálogo de preview
       if (mounted) {
-        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al compartir: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted && !_isDisposed) {
+        setState(() {
+          _isProcessing = false;
+        });
+        
+        // Cerrar el diálogo de preview
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
       }
     }
   }
