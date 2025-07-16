@@ -20,6 +20,7 @@ class _LoginModalState extends State<LoginModal>
   final passCtrl = TextEditingController();
   late AnimationController _controller;
   late Animation<double> _animation;
+  bool _obscurePassword = true; // Add this line to track password visibility
 
   @override
   void initState() {
@@ -157,12 +158,13 @@ class _LoginModalState extends State<LoginModal>
                                         color: Colors.white)),
                                 const SizedBox(height: 24),
                                 _buildTextField(
-                                    controller: emailCtrl, hintText: 'Email'),
+                                    controller: emailCtrl, hintText: 'Email o Usuario'),
                                 const SizedBox(height: 16),
                                 _buildTextField(
                                     controller: passCtrl,
                                     hintText: 'Contraseña',
-                                    obscureText: true),
+                                    obscureText: _obscurePassword,
+                                    isPassword: true), // Add isPassword parameter
                                 const SizedBox(height: 30),
                                 GradientButton(
                                   width: double.infinity,
@@ -201,7 +203,8 @@ class _LoginModalState extends State<LoginModal>
   Widget _buildTextField(
       {required TextEditingController controller,
       required String hintText,
-      bool obscureText = false}) {
+      bool obscureText = false,
+      bool isPassword = false}) { // Add isPassword parameter
     return TextField(
       controller: controller,
       obscureText: obscureText,
@@ -214,6 +217,17 @@ class _LoginModalState extends State<LoginModal>
           borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide.none,
         ),
+        suffixIcon: isPassword ? IconButton(
+          icon: Icon(
+            obscureText ? Icons.visibility : Icons.visibility_off,
+            color: Colors.white54,
+          ),
+          onPressed: () {
+            setState(() {
+              _obscurePassword = !_obscurePassword;
+            });
+          },
+        ) : null,
       ),
       style: const TextStyle(color: Colors.white),
     );

@@ -19,20 +19,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  @override
-  void initState() {
-    super.initState();
-    _loadHomeData();
-  }
-
-  void _loadHomeData() {
-    final userId = UserService.getUserId();
-    if (userId != null) {
-      context.read<HomeBloc>().add(LoadHomeData(userId));
-    } else {
-      print('⚠️ No se pudo obtener el ID del usuario para cargar datos del home');
-    }
-  }
+  // Elimina el initState y _loadHomeData
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +44,14 @@ class _HomePageState extends State<HomePage> {
             }
           },
           builder: (context, state) {
+            // Solo dispara la carga si el estado es HomeInitial
+            if (state is HomeInitial) {
+              final userId = UserService.getUserId();
+              if (userId != null) {
+                context.read<HomeBloc>().add(LoadHomeData(userId));
+              }
+              return const Center(child: CircularProgressIndicator());
+            }
             return SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(

@@ -7,6 +7,8 @@ import 'package:runinsight/features/ranking/domain/entities/ranking_user_entity.
 import 'package:runinsight/features/ranking/domain/usecases/get_ranking.dart';
 import 'package:runinsight/features/ranking/domain/usecases/get_user_position.dart';
 import 'package:runinsight/features/ranking/domain/usecases/get_user_badges.dart';
+import 'package:runinsight/features/ranking/domain/usecases/add_friend.dart';
+import 'package:runinsight/core/di/dependency_injection.dart';
 import 'package:runinsight/features/ranking/data/repositories/friends_ranking_repository_impl.dart';
 import 'package:runinsight/features/ranking/data/datasources/friends_ranking_remote_datasource.dart';
 import 'package:runinsight/features/ranking/data/datasources/badges_remote_datasource.dart';
@@ -125,168 +127,190 @@ class _RankingPageState extends State<RankingPage> {
 
   Widget _buildLoadingState() {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0C27),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (GoRouter.of(context).canPop()) {
-              context.pop();
-            } else {
-              context.go('/home');
-            }
-          },
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF050510), Color(0xFF0A0A20), Color(0xFF0C0C27)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
-        title: const Text(
-          'Ranking de amigos',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          _buildToggleButton(),
-          const Expanded(
-            child: Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFFFF6A00),
+        child: Column(
+          children: [
+            AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              title: const Text(
+                'Ranking de amigos',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              centerTitle: true,
+            ),
+            _buildToggleButton(),
+            const Expanded(
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFFFF6A00),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildBadgesLoadingState() {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0C27),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (GoRouter.of(context).canPop()) {
-              context.pop();
-            } else {
-              context.go('/home');
-            }
-          },
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF050510), Color(0xFF0A0A20), Color(0xFF0C0C27)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
-        title: const Text(
-          'Mis Insignias',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          _buildToggleButton(),
-          const Expanded(
-            child: Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFFFF6A00),
+        child: Column(
+          children: [
+            AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  if (GoRouter.of(context).canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/home');
+                  }
+                },
+              ),
+              title: const Text(
+                'Mis Insignias',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              centerTitle: true,
+            ),
+            _buildToggleButton(),
+            const Expanded(
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFFFF6A00),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildBadgesState(BuildContext context, BadgesLoaded state) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0C27),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (GoRouter.of(context).canPop()) {
-              context.pop();
-            } else {
-              context.go('/home');
-            }
-          },
-        ),
-        title: const Text(
-          'Mis Insignias',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          _buildToggleButton(),
-          Expanded(
-            child: BadgesTab(
-              badges: state.badges,
-              isLoading: false,
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF050510), Color(0xFF0A0A20), Color(0xFF0C0C27)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-        ],
+        ),
+        child: Column(
+          children: [
+            AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  if (GoRouter.of(context).canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/home');
+                  }
+                },
+              ),
+              title: const Text(
+                'Mis Insignias',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              centerTitle: true,
+            ),
+            _buildToggleButton(),
+            Expanded(
+              child: BadgesTab(
+                badges: state.badges,
+                isLoading: false,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildErrorState(BuildContext context, RankingError state) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0C27),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (GoRouter.of(context).canPop()) {
-              context.pop();
-            } else {
-              context.go('/home');
-            }
-          },
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF050510), Color(0xFF0A0A20), Color(0xFF0C0C27)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
-        title: const Text(
-          'Ranking de amigos',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          _buildToggleButton(),
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    color: Colors.red,
-                    size: 64,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error: ${state.message}',
-                    style: const TextStyle(color: Colors.white),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      final userId = UserService.getUserId()?.toString() ?? '1';
-                      _rankingBloc.add(LoadRankingRequested(userId));
-                    },
-                    child: const Text('Reintentar'),
-                  ),
-                ],
+        child: Column(
+          children: [
+            AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  if (GoRouter.of(context).canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/home');
+                  }
+                },
+              ),
+              title: const Text(
+                'Ranking de amigos',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              centerTitle: true,
+            ),
+            _buildToggleButton(),
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      color: Colors.red,
+                      size: 64,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error: ${state.message}',
+                      style: const TextStyle(color: Colors.white),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        final userId = UserService.getUserId()?.toString() ?? '1';
+                        _rankingBloc.add(LoadRankingRequested(userId));
+                      },
+                      child: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -308,150 +332,206 @@ class _RankingPageState extends State<RankingPage> {
     final bool userInTop4 = userIndex >= 0 && userIndex < 4;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0C27),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (GoRouter.of(context).canPop()) {
-              context.pop();
-            } else {
-              context.go('/home');
-            }
-          },
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF050510), Color(0xFF0A0A20), Color(0xFF0C0C27)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
-        title: const Text(
-          'Ranking de amigos',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          _buildToggleButton(),
-          Expanded(
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Compite con tus amigos runners',
-                      style: TextStyle(color: Colors.white70, fontSize: 16),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: users.length,
-                        itemBuilder: (context, i) {
-                          if (i < 4) {
-                            return RankingItem(
-                              position: i + 1,
-                              name: users[i].name,
-                              km: users[i].km,
-                              workouts: users[i].workouts,
-                              isCurrentUser: users[i].isCurrentUser,
-                              isTop4: true,
-                              highlightColor: users[i].isCurrentUser ? const Color(0xFFFF6A00) : null,
-                            );
-                          } else if (!userInTop4 && i == userIndex) {
-                            // Solo muestra la posición del usuario fuera del top 4
-                            return UserRankingPosition(
-                              position: i + 1,
-                              name: users[i].name,
-                              km: users[i].km,
-                              workouts: users[i].workouts,
-                              highlightColor: users[i].isCurrentUser ? const Color(0xFFFF6A00) : null,
-                            );
-                          } else {
-                            return const SizedBox.shrink();
-                          }
-                        },
+        child: Column(
+          children: [
+            AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              title: const Text(
+                'Ranking de amigos',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              centerTitle: true,
+            ),
+            _buildToggleButton(),
+            Expanded(
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Compite con tus amigos runners',
+                        style: TextStyle(color: Colors.white70, fontSize: 16),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    ShareButton(onPressed: () => _shareRanking(users)),
-                    const SizedBox(height: 16),
-                  ],
+                      const SizedBox(height: 24),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: users.length,
+                          itemBuilder: (context, i) {
+                            if (i < 4) {
+                              return RankingItem(
+                                position: i + 1,
+                                name: users[i].name,
+                                km: users[i].km,
+                                workouts: users[i].workouts,
+                                isCurrentUser: users[i].isCurrentUser,
+                                isTop4: true,
+                                highlightColor: users[i].isCurrentUser ? const Color(0xFFFF6A00) : null,
+                              );
+                            } else if (!userInTop4 && i == userIndex) {
+                              // Solo muestra la posición del usuario fuera del top 4
+                              return UserRankingPosition(
+                                position: i + 1,
+                                name: users[i].name,
+                                km: users[i].km,
+                                workouts: users[i].workouts,
+                                highlightColor: users[i].isCurrentUser ? const Color(0xFFFF6A00) : null,
+                              );
+                            } else {
+                              return const SizedBox.shrink();
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Botón Agregar Amigo (azul, destacado)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _shareInvitationLink(context),
+                          icon: const Icon(Icons.person_add, color: Colors.white, size: 22),
+                          label: const Text(
+                            'Agregar Amigo',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFF2979FF),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 6,
+                            shadowColor: Color(0xFF2979FF).withOpacity(0.3),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Botón Compartir Ranking (más delgado, naranja)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _shareRanking(users),
+                          icon: const Icon(Icons.ios_share, color: Colors.white, size: 22),
+                          label: const Text(
+                            'Compartir Mi Ranking',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFF6A00),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildEmptyState(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0C0C27),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (GoRouter.of(context).canPop()) {
-              context.pop();
-            } else {
-              context.go('/home');
-            }
-          },
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF050510), Color(0xFF0A0A20), Color(0xFF0C0C27)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
-        title: const Text(
-          'Ranking de amigos',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          _buildToggleButton(),
-          Expanded(
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.people_outline,
-                      color: Colors.white70,
-                      size: 64,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'No tienes amigos aún',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+        child: Column(
+          children: [
+            AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  if (GoRouter.of(context).canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/home');
+                  }
+                },
+              ),
+              title: const Text(
+                'Ranking de amigos',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              centerTitle: true,
+            ),
+            _buildToggleButton(),
+            Expanded(
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.people_outline,
+                        color: Colors.white70,
+                        size: 64,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Comparte tu link de invitación para agregar amigos y competir en el ranking',
-                      style: TextStyle(color: Colors.white70, fontSize: 16),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ShareButton(
-                      onPressed: () => _shareInvitationLink(context),
-                      text: 'Compartir Link de Invitación',
-                      icon: Icons.share,
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      const Text(
+                        'No tienes amigos aún',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Comparte tu link de invitación para agregar amigos y competir en el ranking',
+                        style: TextStyle(color: Colors.white70, fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      ShareButton(
+                        onPressed: () => _shareInvitationLink(context),
+                        text: 'Compartir Link de Invitación',
+                        icon: Icons.share,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -469,6 +549,133 @@ class _RankingPageState extends State<RankingPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error al generar el link: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showAddFriendDialog(BuildContext context) {
+    final TextEditingController friendIdController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF181B23),
+          title: const Text(
+            'Agregar Amigo',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Ingresa el ID del usuario que quieres agregar como amigo:',
+                style: TextStyle(color: Colors.white70),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: friendIdController,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'ID del usuario',
+                  hintStyle: const TextStyle(color: Colors.white54),
+                  filled: true,
+                  fillColor: const Color(0xFF0C0C27),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFFF6A00), width: 2),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Cancelar',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final friendId = int.tryParse(friendIdController.text);
+                if (friendId != null) {
+                  Navigator.of(context).pop();
+                  await _addFriend(context, friendId);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Por favor ingresa un ID válido'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF6A00),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Agregar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _addFriend(BuildContext context, int friendId) async {
+    try {
+      final currentUserId = UserService.getUserId();
+      if (currentUserId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Debes iniciar sesión para agregar amigos'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      // Evitar agregarse a sí mismo como amigo
+      if (currentUserId == friendId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No puedes agregarte a ti mismo como amigo'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      final addFriendUseCase = DependencyInjection.getAddFriendUseCase();
+      await addFriendUseCase(currentUserId, friendId);
+      
+      // Recargar el ranking después de agregar el amigo
+      final userId = UserService.getUserId()?.toString() ?? '1';
+      _rankingBloc.add(LoadRankingRequested(userId));
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('¡Amigo agregado exitosamente!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al agregar amigo: $e'),
           backgroundColor: Colors.red,
         ),
       );

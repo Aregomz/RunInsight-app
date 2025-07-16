@@ -23,71 +23,79 @@ class ProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
-      body: SafeArea(
-        child: BlocBuilder<UserBloc, UserState>(
-          builder: (context, state) {
-            if (state is UserLoading) {
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF050510), Color(0xFF0A0A20), Color(0xFF0C0C27)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: BlocBuilder<UserBloc, UserState>(
+            builder: (context, state) {
+              if (state is UserLoading) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Color(0xFFFF6A00)),
+                );
+              }
+
+              if (state is UserError) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Error: ${state.message}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          context.read<UserBloc>().add(const LoadCurrentUser());
+                        },
+                        child: const Text('Reintentar'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              if (state is UserLoaded) {
+                final userData = state.userData;
+                final name = userData['name'] ?? 'Usuario';
+                final username = userData['username'] ?? '';
+                final email = userData['email'] ?? '';
+                final stats = userData['stats'] ?? {};
+
+                // Datos de estadísticas del usuario desde la API
+                final kmTotal = _formatDecimal(stats['km_total']) ?? '0.00';
+                final trainingCounter =
+                    stats['training_counter']?.toString() ?? '0';
+                final bestRhythm = _formatDecimal(stats['best_rhythm']) ?? '0.00';
+
+                return _buildProfileView(
+                  context,
+                  name,
+                  username,
+                  email,
+                  kmTotal,
+                  trainingCounter,
+                  bestRhythm,
+                  userData,
+                );
+              }
+
+              // Estado inicial - cargar datos del usuario
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                context.read<UserBloc>().add(const LoadCurrentUser());
+              });
+
               return const Center(
                 child: CircularProgressIndicator(color: Color(0xFFFF6A00)),
               );
-            }
-
-            if (state is UserError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Error: ${state.message}',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        context.read<UserBloc>().add(const LoadCurrentUser());
-                      },
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            if (state is UserLoaded) {
-              final userData = state.userData;
-              final name = userData['name'] ?? 'Usuario';
-              final username = userData['username'] ?? '';
-              final email = userData['email'] ?? '';
-              final stats = userData['stats'] ?? {};
-
-              // Datos de estadísticas del usuario desde la API
-              final kmTotal = _formatDecimal(stats['km_total']) ?? '0.00';
-              final trainingCounter =
-                  stats['training_counter']?.toString() ?? '0';
-              final bestRhythm = _formatDecimal(stats['best_rhythm']) ?? '0.00';
-
-              return _buildProfileView(
-                context,
-                name,
-                username,
-                email,
-                kmTotal,
-                trainingCounter,
-                bestRhythm,
-                userData,
-              );
-            }
-
-            // Estado inicial - cargar datos del usuario
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              context.read<UserBloc>().add(const LoadCurrentUser());
-            });
-
-            return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFFF6A00)),
-            );
-          },
+            },
+          ),
         ),
       ),
     );

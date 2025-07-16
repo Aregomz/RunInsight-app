@@ -22,6 +22,9 @@ import 'package:flutter/scheduler.dart' show Ticker, TickerProviderStateMixin;
 import '../../data/services/training_data_service.dart';
 import '../../data/services/training_state_service.dart';
 import 'package:provider/provider.dart';
+import '../../../ranking/presentation/bloc/ranking_bloc.dart';
+import '../../../home/presentation/bloc/home_bloc.dart';
+import '../../../user/data/services/user_service.dart';
 
 class TrainingInProgressPage extends StatefulWidget {
   const TrainingInProgressPage({super.key});
@@ -662,6 +665,13 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage>
               'date': state.date,
             };
             TrainingDataService.setLastTrainingData(trainingData);
+
+            // --- RECARGA DE DATOS EN OTRAS TABS ---
+            final userId = UserService.getUserId()?.toString() ?? '1';
+            context.read<RankingBloc>().add(LoadRankingRequested(userId));
+            final userIdInt = UserService.getUserId() ?? 1;
+            context.read<HomeBloc>().add(LoadHomeData(userIdInt));
+            // --------------------------------------
 
             // Navegar a la página de resumen del entrenamiento
             context.go('/training-summary');

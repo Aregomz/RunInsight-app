@@ -135,14 +135,17 @@ class _ShareTrainingWidgetState extends State<ShareTrainingWidget> {
         imageQuality: 85,
       );
 
-      if (image != null) {
-        setState(() {
-          _selectedImage = File(image.path);
-        });
-        
-        // Mostrar preview y opciones de compartir
-        _showPreviewDialog();
+      if (image == null) {
+        // El usuario canceló la selección, no hacer nada
+        return;
       }
+
+      setState(() {
+        _selectedImage = File(image.path);
+      });
+      
+      // Mostrar preview y opciones de compartir
+      _showPreviewDialog();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -401,22 +404,27 @@ class _ShareTrainingWidgetState extends State<ShareTrainingWidget> {
       // Capturar la imagen
       final Uint8List? imageBytes = await _screenshotController.capture();
       
-      if (imageBytes != null) {
-        // Guardar temporalmente la imagen
-        final directory = await getTemporaryDirectory();
-        final imagePath = '${directory.path}/training_share_${DateTime.now().millisecondsSinceEpoch}.png';
-        final imageFile = File(imagePath);
-        await imageFile.writeAsBytes(imageBytes);
-        
-        // Compartir la imagen
-        await Share.shareXFiles(
-          [XFile(imagePath)],
-          text: '¡Mira mi entrenamiento en RunInsight! 🏃‍♂️',
-        );
-        
-        // Limpiar archivo temporal
-        await imageFile.delete();
+      if (imageBytes == null) {
+        // El usuario canceló o hubo error, no hacer nada
+        setState(() {
+          _isProcessing = false;
+        });
+        return;
       }
+      // Guardar temporalmente la imagen
+      final directory = await getTemporaryDirectory();
+      final imagePath = '${directory.path}/training_share_${DateTime.now().millisecondsSinceEpoch}.png';
+      final imageFile = File(imagePath);
+      await imageFile.writeAsBytes(imageBytes);
+      
+      // Compartir la imagen
+      await Share.shareXFiles(
+        [XFile(imagePath)],
+        text: '¡Mira mi entrenamiento en RunInsight! 🏃‍♂️',
+      );
+      
+      // Limpiar archivo temporal
+      await imageFile.delete();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

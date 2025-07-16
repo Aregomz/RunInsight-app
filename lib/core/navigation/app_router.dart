@@ -77,7 +77,7 @@ class AppRouter {
       ShellRoute(
         builder: (_, __, child) => ChangeNotifierProvider(
           create: (_) => TrainingStateService(),
-          child: AppShell(child: child),
+          child: AppShell(),
         ),
         routes: [
           GoRoute(
