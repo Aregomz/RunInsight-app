@@ -10,6 +10,10 @@ import 'package:runinsight/features/home/presentation/widgets/stats_summary.dart
 import 'package:runinsight/features/home/presentation/widgets/training_button.dart';
 import 'package:runinsight/features/home/presentation/widgets/weather_info.dart';
 import '../bloc/home_bloc.dart';
+import 'package:runinsight/features/trainings/presentation/bloc/trainings_bloc.dart';
+import 'package:runinsight/features/user/presentation/bloc/user_bloc.dart';
+import 'package:runinsight/features/trainings/presentation/bloc/trainings_event.dart';
+import 'package:runinsight/features/trainings/presentation/bloc/trainings_state.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -32,48 +36,84 @@ class _HomePageState extends State<HomePage> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: BlocConsumer<HomeBloc, HomeState>(
-          listener: (context, state) {
-            if (state is HomeError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.red,
+        child: BlocListener<UserBloc, UserState>(
+          listener: (context, userState) {
+            if (userState is UserLoaded) {
+              final userId = userState.userData['id'];
+              if (userId != null) {
+                print('HomePage: Disparando LoadUserTrainings para userId = $userId');
+                context.read<TrainingsBloc>().add(LoadUserTrainings(userId));
+              }
+            }
+          },
+          child: BlocConsumer<HomeBloc, HomeState>(
+            listener: (context, state) {
+              if (state is HomeError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.message),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            builder: (context, state) {
+              // Solo dispara la carga si el estado es HomeInitial
+              if (state is HomeInitial) {
+                final userId = UserService.getUserId();
+                if (userId != null) {
+                  context.read<HomeBloc>().add(LoadHomeData(userId));
+                }
+                return const Center(child: CircularProgressIndicator());
+              }
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CalendarWidget(),
+                    const SizedBox(height: 0),
+                    GreetingHeader(),
+                    const SizedBox(height: 2),
+                    _buildBadgeSummary(state),
+                    const SizedBox(height: 6),
+                    WeatherInfoWidget(),
+                    const SizedBox(height: 24),
+                    TrainingButton(),
+                    const SizedBox(height: 16),
+                    // Print para depuración
+                    (() { print('HomePage: Construyendo IACoachButton'); return SizedBox.shrink(); })(),
+                    BlocBuilder<TrainingsBloc, TrainingsState>(
+                      builder: (context, trainingsState) {
+                        final lastTrainings = (trainingsState is TrainingsLoaded)
+                            ? trainingsState.trainings.map((e) => {
+                                'id': e.id,
+                                'time_minutes': e.timeMinutes,
+                                'distance_km': e.distanceKm,
+                                'rhythm': e.rhythm,
+                                'date': e.date.toIso8601String(),
+                                'altitude': e.altitude,
+                                'notes': e.notes,
+                                'trainingType': e.trainingType,
+                                'terrainType': e.terrainType,
+                                'weather': e.weather,
+                              }).toList()
+                            : <Map<String, dynamic>>[];
+                        return (state is HomeLoaded)
+                            ? IACoachButton(
+                                userStats: state.userData ?? {},
+                                lastTrainings: lastTrainings,
+                              )
+                            : const SizedBox.shrink();
+                      },
+                    ),
+                    const SizedBox(height: 32),
+                    _buildStatsSummary(state),
+                  ],
                 ),
               );
-            }
-          },
-          builder: (context, state) {
-            // Solo dispara la carga si el estado es HomeInitial
-            if (state is HomeInitial) {
-              final userId = UserService.getUserId();
-              if (userId != null) {
-                context.read<HomeBloc>().add(LoadHomeData(userId));
-              }
-              return const Center(child: CircularProgressIndicator());
-            }
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CalendarWidget(),
-                  const SizedBox(height: 0),
-                  GreetingHeader(),
-                  const SizedBox(height: 2),
-                  _buildBadgeSummary(state),
-                  const SizedBox(height: 6),
-                  WeatherInfoWidget(),
-                  const SizedBox(height: 24),
-                  TrainingButton(),
-                  const SizedBox(height: 16),
-                  IACoachButton(),
-                  const SizedBox(height: 32),
-                  _buildStatsSummary(state),
-                ],
-              ),
-            );
-          },
+            },
+          ),
         ),
       ),
     );

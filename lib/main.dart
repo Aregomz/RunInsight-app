@@ -6,6 +6,7 @@ import 'core/navigation/app_router.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'core/di/dependency_injection.dart';
 import 'features/user/data/services/user_service.dart';
+import 'features/user/presentation/bloc/user_bloc.dart';
 
 void main() async {
   // Optimizaciones para mejorar el rendimiento
@@ -27,8 +28,15 @@ class RunInsightApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => DependencyInjection.getAuthBloc(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(
+          create: (context) => DependencyInjection.getAuthBloc(),
+        ),
+        BlocProvider<UserBloc>(
+          create: (context) => UserBloc(),
+        ),
+      ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         routerConfig: AppRouter.router,

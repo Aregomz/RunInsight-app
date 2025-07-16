@@ -9,8 +9,7 @@ class TrainingButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GradientButton(
       onPressed: () {
-        // Navegar a la página de entrenamiento en progreso
-        GoRouter.of(context).go('/training_in_progress');
+        context.push('/training_in_progress');
       },
       text: 'Iniciar Entrenamiento',
       width: double.infinity,

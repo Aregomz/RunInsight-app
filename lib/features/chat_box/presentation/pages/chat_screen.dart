@@ -117,15 +117,6 @@ class _ChatScreenViewState extends State<_ChatScreenView> {
                       ),
                     ],
                   ),
-                  ElevatedButton.icon(
-                    onPressed: _navigateToPredictions,
-                    icon: const Icon(Icons.bar_chart),
-                    label: const Text('Ver predicciones'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurple,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 12),

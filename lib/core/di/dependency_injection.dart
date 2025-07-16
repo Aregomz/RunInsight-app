@@ -16,6 +16,11 @@ import '../../features/profile/data/repositories/profile_repository_impl.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/domain/usecases/update_profile_usecase.dart';
 import '../../core/network/dio_client.dart';
+import '../../features/ia_coach/data/datasources/ia_coach_remote_datasource_impl.dart';
+import '../../features/ia_coach/data/repositories/ia_coach_repository_impl.dart';
+import '../../features/ia_coach/domain/usecases/get_ia_predictions_usecase.dart';
+import '../../features/ia_coach/presentation/bloc/ia_coach_bloc.dart';
+import '../../core/services/gemini_api_service.dart';
 
 class DependencyInjection {
   static void init() {
@@ -101,5 +106,26 @@ class DependencyInjection {
 
   static UpdateProfileUseCase getUpdateProfileUseCase() {
     return UpdateProfileUseCase(repository: getProfileRepository());
+  }
+
+  // IA Coach dependencies
+  static GeminiApiService getGeminiApiService() {
+    return GeminiApiService();
+  }
+
+  static IaCoachRemoteDatasourceImpl getIaCoachRemoteDatasource() {
+    return IaCoachRemoteDatasourceImpl(geminiApiService: getGeminiApiService());
+  }
+
+  static IaCoachRepositoryImpl getIaCoachRepository() {
+    return IaCoachRepositoryImpl(remoteDatasource: getIaCoachRemoteDatasource());
+  }
+
+  static GetIaPredictionsUseCase getIaPredictionsUseCase() {
+    return GetIaPredictionsUseCase(getIaCoachRepository());
+  }
+
+  static IaCoachBloc getIaCoachBloc() {
+    return IaCoachBloc(getPredictions: getIaPredictionsUseCase());
   }
 } 

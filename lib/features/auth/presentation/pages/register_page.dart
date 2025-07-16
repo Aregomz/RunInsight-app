@@ -361,8 +361,8 @@ class _RegisterPageState extends State<RegisterPage> {
                             hintText: 'Contraseña',
                             obscureText: true,
                             validator: (value) {
-                              if (value == null || value.length < 6) {
-                                return 'Mínimo 6 caracteres';
+                              if (value == null || value.length < 8) {
+                                return 'Mínimo 8 caracteres';
                               }
                               return null;
                             },

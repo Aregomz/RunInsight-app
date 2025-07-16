@@ -10,7 +10,7 @@ class GradientButton extends StatelessWidget {
     this.colors = const [Color(0xFFFF6A00), Color(0xFFFF3C4A)],
   });
 
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final String text;
   final double? width;
   final EdgeInsets padding;

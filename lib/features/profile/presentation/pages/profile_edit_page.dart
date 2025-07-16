@@ -110,7 +110,13 @@ class _ProfileEditViewState extends State<ProfileEditView> {
               elevation: 0,
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                onPressed: () => context.pop(),
+                onPressed: () {
+                  if (GoRouter.of(context).canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/profile');
+                  }
+                },
               ),
             ),
             Expanded(

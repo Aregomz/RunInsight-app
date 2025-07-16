@@ -37,6 +37,8 @@ import 'package:runinsight/features/ranking/data/datasources/badges_remote_datas
 import 'package:runinsight/features/user/data/services/user_service.dart';
 import 'package:runinsight/features/active_training/data/services/training_state_service.dart';
 import 'package:provider/provider.dart';
+import 'package:runinsight/features/user/presentation/bloc/user_bloc.dart';
+import 'package:runinsight/features/ia_coach/presentation/pages/ia_coach_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -77,24 +79,42 @@ class AppRouter {
       ShellRoute(
         builder: (_, __, child) => ChangeNotifierProvider(
           create: (_) => TrainingStateService(),
-          child: AppShell(),
+          child: AppShell(child: child),
         ),
         routes: [
           GoRoute(
             path: '/home',
-            builder: (_, __) => BlocProvider(
-              create: (_) => HomeBloc(
-                getWeeklyStats: GetWeeklyStats(
-                  WeeklyStatsRepositoryImpl(
-                    remoteDataSource: WeeklyStatsRemoteDataSourceImpl(
-                      dio: DioClient.instance,
+            builder: (_, __) => MultiBlocProvider(
+              providers: [
+                BlocProvider<HomeBloc>(
+                  create: (_) => HomeBloc(
+                    getWeeklyStats: GetWeeklyStats(
+                      WeeklyStatsRepositoryImpl(
+                        remoteDataSource: WeeklyStatsRemoteDataSourceImpl(
+                          dio: DioClient.instance,
+                        ),
+                      ),
+                    ),
+                    getWeather: GetWeather(
+                      WeatherRepositoryImpl(),
                     ),
                   ),
                 ),
-                getWeather: GetWeather(
-                  WeatherRepositoryImpl(),
+                BlocProvider<UserBloc>(
+                  create: (_) => UserBloc()..add(const LoadCurrentUser()),
                 ),
-              ),
+                BlocProvider<TrainingsBloc>(
+                  create: (_) => TrainingsBloc(
+                    getUserTrainings: GetUserTrainings(
+                      TrainingsRepositoryImpl(
+                        remoteDataSource: TrainingsRemoteDataSourceImpl(
+                          dio: DioClient.instance,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
               child: const HomePage(),
             ),
           ),
@@ -200,6 +220,18 @@ class AppRouter {
             },
           ),
           GoRoute(path: '/chat', builder: (_, __) => const ChatScreen()),
+          GoRoute(
+            path: '/ia-coach',
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              final userStats = extra?['userStats'] as Map<String, dynamic>? ?? {};
+              final lastTrainings = extra?['lastTrainings'] as List<dynamic>? ?? [];
+              return IACoachPage(
+                userStats: userStats,
+                lastTrainings: List<Map<String, dynamic>>.from(lastTrainings),
+              );
+            },
+          ),
           // futuras rutas: /coach, /social, etc.
         ],
       ),

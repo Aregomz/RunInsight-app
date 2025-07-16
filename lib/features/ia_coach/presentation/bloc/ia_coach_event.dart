@@ -1,8 +1,9 @@
 part of 'ia_coach_bloc.dart';
 
-abstract class IaCoachEvent extends Equatable {
-  const IaCoachEvent();
+abstract class IaCoachEvent {}
 
-  @override
-  List<Object> get props => [];
+class IaCoachRequested extends IaCoachEvent {
+  final Map<String, dynamic> userStats;
+  final List<Map<String, dynamic>> lastTrainings;
+  IaCoachRequested({required this.userStats, required this.lastTrainings});
 }
