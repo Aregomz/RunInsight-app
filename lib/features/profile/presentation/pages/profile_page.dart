@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runinsight/features/profile/presentation/widgets/profile_header.dart';
 import 'package:runinsight/features/user/presentation/bloc/user_bloc.dart';
+import 'package:runinsight/features/user/data/services/user_service.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -212,9 +213,13 @@ class ProfileView extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Cerrar sesión y limpiar el stack de navegación usando GoRouter
+                  onPressed: () async {
+                    // 1. Navega fuera del árbol de providers (a la pantalla de bienvenida)
                     context.go('/');
+                    // 2. Espera un frame para asegurar que el árbol se reconstruya
+                    await Future.delayed(const Duration(milliseconds: 100));
+                    // 3. Limpia los datos del usuario
+                    await UserService.clearUserData();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 105, 2, 2),

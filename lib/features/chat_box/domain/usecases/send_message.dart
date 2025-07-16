@@ -10,4 +10,12 @@ class SendMessageUseCase {
   Future<List<ChatMessage>> call(String message) async {
     return await repository.sendMessage(message);
   }
+  
+  Future<List<ChatMessage>> loadMessages({int? userId}) async {
+    return await repository.loadMessages(userId: userId);
+  }
+  
+  Future<void> clearChat({int? userId}) async {
+    return await repository.clearChat(userId: userId);
+  }
 }

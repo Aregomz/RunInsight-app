@@ -30,6 +30,7 @@ import '../../features/chat_box/presentation/bloc/chat_box_bloc.dart';
 import '../../features/chat_box/domain/usecases/send_message.dart';
 import '../../features/chat_box/data/repositories/chat_repository_impl.dart';
 import '../../core/services/gemini_api_service.dart';
+import 'package:runinsight/features/user/data/services/user_service.dart';
 
 class AppShell extends StatefulWidget {
   final Widget child;
@@ -99,7 +100,14 @@ class _AppShellState extends State<AppShell> {
       remoteDataSource: WeeklyStatsRemoteDataSourceImpl(dio: DioClient.instance),
     );
     final weatherRepository = WeatherRepositoryImpl();
-    final chatRepository = ChatRepositoryImpl(geminiApiService: GeminiApiService());
+    final userId = UserService.getUserId();
+    if (userId == null) {
+      return const Center(child: Text('Error: Usuario no autenticado'));
+    }
+    final chatRepository = ChatRepositoryImpl(
+      geminiApiService: GeminiApiService(),
+      userId: userId,
+    );
 
     return flutter_bloc.MultiBlocProvider(
       providers: [
@@ -114,6 +122,7 @@ class _AppShellState extends State<AppShell> {
           create: (_) => ChatBloc(
             sendMessage: SendMessageUseCase(chatRepository),
             repository: chatRepository,
+            userId: userId,
           ),
         ),
         flutter_bloc.BlocProvider<HomeBloc>(

@@ -6,9 +6,12 @@ import '../datasources/chat_local_datasource.dart';
 
 class ChatRepositoryImpl implements ChatRepository {
   final GeminiApiService geminiApiService;
-  final ChatStorageService _storageService = ChatStorageService();
+  final int userId;
+  late final ChatStorageService _storageService;
 
-  ChatRepositoryImpl({required this.geminiApiService});
+  ChatRepositoryImpl({required this.geminiApiService, required this.userId}) {
+    _storageService = ChatStorageService(userId);
+  }
 
   @override
   Future<List<ChatMessage>> sendMessage(String message) async {
@@ -102,10 +105,10 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   // Cargar mensajes guardados
-  Future<List<ChatMessage>> loadMessages() async {
+  Future<List<ChatMessage>> loadMessages({int? userId}) async {
     try {
       final messages = await _storageService.loadMessages();
-      print('🔄 Repositorio cargó ${messages.length} mensajes');
+      print('🔄 Repositorio cargó  [90m${messages.length} [0m mensajes');
       return messages;
     } catch (e) {
       print('❌ Error en repositorio al cargar: $e');
@@ -114,12 +117,12 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   // Limpiar historial de chat
-  Future<void> clearChat() async {
+  Future<void> clearChat({int? userId}) async {
     await _storageService.clearMessages();
   }
 
   // Método de debug para verificar almacenamiento
-  Future<void> debugStorage() async {
+  Future<void> debugStorage({int? userId}) async {
     await _storageService.debugStorage();
   }
 }

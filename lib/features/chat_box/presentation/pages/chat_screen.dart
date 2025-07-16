@@ -7,18 +7,24 @@ import 'package:runinsight/features/chat_box/data/repositories/chat_repository_i
 import 'package:runinsight/core/services/gemini_api_service.dart';
 import '../bloc/chat_box_bloc.dart';
 import '../widgets/chat_bubble.dart';
+import 'package:runinsight/features/user/data/services/user_service.dart';
 
 class ChatScreen extends StatelessWidget {
   const ChatScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final userId = UserService.getUserId();
+    if (userId == null) {
+      return const Center(child: Text('Error: Usuario no autenticado'));
+    }
     return BlocProvider(
       create: (context) {
-        final repository = ChatRepositoryImpl(geminiApiService: GeminiApiService());
+        final repository = ChatRepositoryImpl(geminiApiService: GeminiApiService(), userId: userId);
         return ChatBloc(
           sendMessage: SendMessageUseCase(repository),
           repository: repository,
+          userId: userId,
         );
       },
       child: const _ChatScreenView(),

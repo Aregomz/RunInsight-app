@@ -4,7 +4,10 @@ import '../../domain/entities/chat_message.dart';
 import '../models/chat_message_model.dart';
 
 class ChatStorageService {
-  static const String _chatKey = 'chat_messages_v2';
+  final int userId;
+  ChatStorageService(this.userId);
+
+  String get _chatKey => 'chat_messages_v2_ [93m$userId [0m';
 
   // Guardar mensajes en el almacenamiento local
   Future<void> saveMessages(List<ChatMessage> messages) async {

@@ -10,8 +10,9 @@ part 'chat_state.dart';
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final SendMessageUseCase sendMessage;
   final ChatRepositoryImpl repository;
+  final int userId;
 
-  ChatBloc({required this.sendMessage, required this.repository})
+  ChatBloc({required this.sendMessage, required this.repository, required this.userId})
     : super(ChatInitial()) {
     on<ChatMessageSent>(_onMessageSent);
     on<LoadChatHistory>(_onLoadChatHistory);
@@ -30,7 +31,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       print('📤 Enviando mensaje: ${event.message}');
 
       // Cargar mensajes existentes primero
-      final existingMessages = await repository.loadMessages();
+      final existingMessages = await repository.loadMessages(userId: userId);
       print('📥 Mensajes existentes: ${existingMessages.length}');
 
       // Mostrar estado de carga con mensajes existentes
@@ -43,14 +44,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       );
 
       // Cargar todos los mensajes actualizados desde el almacenamiento
-      final allMessages = await repository.loadMessages();
+      final allMessages = await repository.loadMessages(userId: userId);
       print('📥 BLoC actualizado con ${allMessages.length} mensajes total');
 
       emit(ChatLoaded(messages: allMessages));
     } catch (e) {
       print('❌ Error en BLoC: $e');
       // En caso de error, mantener los mensajes existentes
-      final existingMessages = await repository.loadMessages();
+      final existingMessages = await repository.loadMessages(userId: userId);
       emit(ChatLoaded(messages: existingMessages));
     }
   }
@@ -69,7 +70,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
       while (attempts < maxAttempts) {
         try {
-          messages = await repository.loadMessages();
+          messages = await repository.loadMessages(userId: userId);
           print(
             '✅ BLoC: Historial cargado con ${messages.length} mensajes (intento ${attempts + 1})',
           );
@@ -97,7 +98,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     Emitter<ChatState> emit,
   ) async {
     try {
-      await repository.clearChat();
+      await repository.clearChat(userId: userId);
       emit(ChatLoaded(messages: []));
     } catch (e) {
       emit(
