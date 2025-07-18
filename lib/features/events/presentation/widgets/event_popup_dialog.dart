@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import '../../domain/entities/event.dart';
 
 class EventPopupDialog extends StatefulWidget {
@@ -20,21 +21,28 @@ class _EventPopupDialogState extends State<EventPopupDialog>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
+  late Animation<double> _buttonScaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 420),
+      duration: const Duration(milliseconds: 520),
+      reverseDuration: const Duration(milliseconds: 320),
     );
     _scaleAnimation = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeOutBack,
+      curve: Curves.elasticOut,
+      reverseCurve: Curves.easeInBack,
     );
     _fadeAnimation = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeIn,
+      reverseCurve: Curves.easeOut,
+    );
+    _buttonScaleAnimation = Tween<double>(begin: 1.0, end: 1.18).animate(
+      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.3, curve: Curves.easeOutBack)),
     );
     _controller.forward();
   }
@@ -43,6 +51,11 @@ class _EventPopupDialogState extends State<EventPopupDialog>
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void _close() async {
+    await _controller.reverse();
+    widget.onDismiss();
   }
 
   @override
@@ -55,150 +68,202 @@ class _EventPopupDialogState extends State<EventPopupDialog>
         opacity: _fadeAnimation,
         child: ScaleTransition(
           scale: _scaleAnimation,
-          child: Container(
-            width: size.width * 0.98,
-            height: size.height * 0.85,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(36),
-              color: const Color(0xFF0C0C27),
-              border: Border.all(
-                color: Colors.orangeAccent.withOpacity(0.7),
-                width: 3.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
-                  blurRadius: 32,
-                  spreadRadius: 8,
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                // Imagen del evento (fondo)
-                Positioned.fill(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(36),
-                    child: Image.network(
-                      widget.event.imgPath,
-                      fit: BoxFit.cover,
-                      color: Colors.black.withOpacity(0.25),
-                      colorBlendMode: BlendMode.darken,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          color: Colors.grey[800],
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
-                              color: Colors.orangeAccent,
-                            ),
-                          ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey[800],
-                          child: const Center(
-                            child: Icon(
-                              Icons.error_outline,
-                              color: Colors.white,
-                              size: 50,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                // Contenido principal
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Header con botón de cerrar
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16, right: 16, left: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.45),
-                              shape: BoxShape.circle,
-                            ),
-                            child: IconButton(
-                              onPressed: widget.onDismiss,
-                              icon: const Icon(
-                                Icons.close_rounded,
-                                color: Colors.white,
-                                size: 32,
-                              ),
-                              tooltip: 'Cerrar',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Spacer(),
-                    // Información del evento
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.55),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: Colors.orangeAccent.withOpacity(0.25),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Fecha del evento
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: widget.event.isToday
-                                  ? Colors.orangeAccent.withOpacity(0.18)
-                                  : Colors.blueAccent.withOpacity(0.18),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: widget.event.isToday
-                                    ? Colors.orangeAccent
-                                    : Colors.blueAccent,
-                                width: 1,
-                              ),
-                            ),
-                            child: Text(
-                              widget.event.isToday
-                                  ? '¡HOY!'
-                                  : '${widget.event.dateEvent.day.toString().padLeft(2, '0')}/${widget.event.dateEvent.month.toString().padLeft(2, '0')}/${widget.event.dateEvent.year}',
-                              style: TextStyle(
-                                color: widget.event.isToday
-                                    ? Colors.orangeAccent
-                                    : Colors.blueAccent,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-                          // Aquí podrías agregar más información del evento si el backend lo permite
-                        ],
-                      ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Glow exterior
+              Container(
+                width: size.width * 0.98 + 24,
+                height: size.height * 0.85 + 24,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(44),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.orangeAccent.withOpacity(0.25),
+                      blurRadius: 48,
+                      spreadRadius: 12,
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              // Glassmorphism fondo
+              ClipRRect(
+                borderRadius: BorderRadius.circular(36),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                  child: Container(
+                    width: size.width * 0.98,
+                    height: size.height * 0.85,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(36),
+                      color: Colors.white.withOpacity(0.08),
+                      border: Border.all(
+                        color: Colors.orangeAccent.withOpacity(0.7),
+                        width: 3.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.5),
+                          blurRadius: 32,
+                          spreadRadius: 8,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Imagen de fondo difuminada + gradiente overlay
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(36),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(
+                        widget.event.imgPath,
+                        fit: BoxFit.cover,
+                        color: Colors.black.withOpacity(0.22),
+                        colorBlendMode: BlendMode.darken,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            color: Colors.grey[800],
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                                color: Colors.orangeAccent,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[800],
+                            child: const Center(
+                              child: Icon(
+                                Icons.error_outline,
+                                color: Colors.white,
+                                size: 50,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                        child: Container(
+                          color: Colors.transparent,
+                        ),
+                      ),
+                      // Gradiente overlay sutil
+                      Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                            colors: [
+                              Color(0xCC0C0C27),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Imagen principal en contain (siempre completa)
+              Center(
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0.95, end: 1.0),
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.easeOutExpo,
+                  builder: (context, value, child) {
+                    return Transform.scale(
+                      scale: value,
+                      child: child,
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: Container(
+                      color: Colors.black.withOpacity(0.10),
+                      width: size.width * 0.85,
+                      height: size.height * 0.60,
+                      child: Image.network(
+                        widget.event.imgPath,
+                        fit: BoxFit.contain,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            color: Colors.grey[800],
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                                color: Colors.orangeAccent,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[800],
+                            child: const Center(
+                              child: Icon(
+                                Icons.error_outline,
+                                color: Colors.white,
+                                size: 50,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Botón de cerrar con animación
+              Positioned(
+                top: 16,
+                right: 16,
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTapDown: (_) => _controller.forward(from: 0.7),
+                    onTapUp: (_) => _close(),
+                    onTapCancel: () => _controller.reverse(),
+                    child: ScaleTransition(
+                      scale: _buttonScaleAnimation,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.45),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.orangeAccent.withOpacity(0.5),
+                              blurRadius: 16,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Puedes agregar aquí más widgets si el backend lo permite
+            ],
           ),
         ),
       ),
