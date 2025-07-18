@@ -27,6 +27,10 @@ class ApiEndpoints {
   // Chat endpoints
   static const String chat = '/chat';
   
+  // Events endpoints
+  static const String events = '/users/events';
+  static const String futureEvents = '/users/events/by/future';
+  
   // Weatherbit API
   static const String weatherbitBaseUrl = 'https://api.weatherbit.io/v2.0';
   static const String weatherbitApiKey = 'b608d9642fea4d118f5f680968e47e8a';

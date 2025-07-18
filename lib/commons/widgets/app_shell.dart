@@ -31,6 +31,11 @@ import '../../features/chat_box/domain/usecases/send_message.dart';
 import '../../features/chat_box/data/repositories/chat_repository_impl.dart';
 import '../../core/services/gemini_api_service.dart';
 import 'package:runinsight/features/user/data/services/user_service.dart';
+import '../../features/events/presentation/bloc/events_bloc.dart';
+import '../../features/events/domain/usecases/get_future_events.dart';
+import '../../features/events/data/repositories/events_repository_impl.dart';
+import '../../features/events/data/datasources/events_remote_datasource.dart';
+import '../../features/events/presentation/widgets/events_handler.dart';
 
 class AppShell extends StatefulWidget {
   final Widget child;
@@ -109,6 +114,12 @@ class _AppShellState extends State<AppShell> {
       userId: userId,
     );
 
+    // Instancias para Events
+    final eventsDataSource = EventsRemoteDataSourceImpl();
+    final eventsRepository = EventsRepositoryImpl(
+      remoteDataSource: eventsDataSource,
+    );
+
     return flutter_bloc.MultiBlocProvider(
       providers: [
         flutter_bloc.BlocProvider<RankingBloc>(
@@ -136,20 +147,26 @@ class _AppShellState extends State<AppShell> {
             getUserTrainings: GetUserTrainings(trainingsRepository),
           ),
         ),
+        flutter_bloc.BlocProvider<EventsBloc>(
+          create: (_) => EventsBloc(
+            getFutureEvents: GetFutureEvents(eventsRepository),
+          ),
+        ),
         // Si ProfilePage necesita un bloc, agregar aquí
       ],
-      child: Scaffold(
-        body: isMainRoute
-            ? PageView(
-                controller: _pageController,
-                children: _pages,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentIndex = index;
-                  });
-                },
-              )
-            : widget.child,
+      child: EventsHandler(
+        child: Scaffold(
+          body: isMainRoute
+              ? PageView(
+                  controller: _pageController,
+                  children: _pages,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentIndex = index;
+                    });
+                  },
+                )
+              : widget.child,
         bottomNavigationBar: showNavBar
             ? BottomNavigationBar(
                 currentIndex: _currentIndex,
@@ -193,6 +210,7 @@ class _AppShellState extends State<AppShell> {
                 ],
               )
             : null,
+        ),
       ),
     );
   }
