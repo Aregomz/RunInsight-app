@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import '../../features/active_training/data/services/training_state_service.dart';
 import '../../features/ranking/presentation/pages/ranking_page.dart';
 import '../../features/chat_box/presentation/pages/chat_screen.dart';
@@ -66,17 +65,9 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    bool isTrainingActive = false;
-    bool providerAvailable = true;
-    try {
-      final trainingState = Provider.of<TrainingStateService>(
-        context,
-        listen: true,
-      );
-      isTrainingActive = trainingState.isTrainingActive;
-    } catch (e) {
-      providerAvailable = false;
-    }
+    // Usar TrainingStateService directamente sin Provider
+    final trainingState = TrainingStateService();
+    final isTrainingActive = trainingState.isTrainingActive;
 
     // Obtener la ruta actual de forma compatible con go_router
     final location = GoRouterState.of(context).uri.path;
@@ -90,7 +81,15 @@ class _AppShellState extends State<AppShell> {
     print('AppShell: isTrainingRoute = $isTrainingRoute');
     print('AppShell: isTrainingActive = $isTrainingActive');
 
-    final showNavBar = (isMainRoute || (isTrainingRoute && !isTrainingActive)) && (providerAvailable || !isTrainingActive);
+    final showNavBar = (isMainRoute || (isTrainingRoute && !isTrainingActive));
+
+    // Verificar si estamos en una ruta de autenticación para evitar renderizar AppShell
+    const authRoutes = ['/', '/register'];
+    final isAuthRoute = authRoutes.contains(location);
+    if (isAuthRoute) {
+      // Si estamos en una ruta de auth, no renderizar AppShell
+      return const SizedBox.shrink();
+    }
 
     // Instancias de repositorios y usecases para los blocs
     final badgesDataSource = BadgesRemoteDataSourceImpl();
@@ -106,8 +105,16 @@ class _AppShellState extends State<AppShell> {
     );
     final weatherRepository = WeatherRepositoryImpl();
     final userId = UserService.getUserId();
+    // Si no hay usuario autenticado, mostrar un loading en lugar de error
+    // Esto evita el parpadeo durante el logout
     if (userId == null) {
-      return const Center(child: Text('Error: Usuario no autenticado'));
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFFFF6A00),
+          ),
+        ),
+      );
     }
     final chatRepository = ChatRepositoryImpl(
       geminiApiService: GeminiApiService(),

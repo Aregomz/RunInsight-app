@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/network/api_endpoints.dart';
+import '../../../auth/data/services/auth_init_service.dart';
 
 class UserService {
   // static const String _baseUrl =
@@ -13,11 +14,34 @@ class UserService {
 
   // Inicializar el token desde shared_preferences
   static Future<void> init() async {
-    final prefs = await SharedPreferences.getInstance();
-    _authToken = prefs.getString('auth_token');
-    final userDataString = prefs.getString('user_data');
-    if (userDataString != null) {
-      _userData = json.decode(userDataString);
+    try {
+      // Usar AuthInitService para cargar datos de autenticación
+      final authData = await AuthInitService.getSessionInfo();
+      
+      if (authData['isLoggedIn'] == true && authData['userData'] != null) {
+        _userData = authData['userData'] as Map<String, dynamic>;
+        _authToken = _userData?['token'];
+        print('✅ UserService inicializado con datos de AuthInitService');
+        print('🔑 Token: ${_authToken?.substring(0, 20)}...');
+      } else {
+        // Fallback al método anterior
+        final prefs = await SharedPreferences.getInstance();
+        _authToken = prefs.getString('auth_token');
+        final userDataString = prefs.getString('user_data');
+        if (userDataString != null) {
+          _userData = json.decode(userDataString);
+        }
+        print('✅ UserService inicializado con fallback');
+      }
+    } catch (e) {
+      print('❌ Error al inicializar UserService: $e');
+      // Fallback al método anterior
+      final prefs = await SharedPreferences.getInstance();
+      _authToken = prefs.getString('auth_token');
+      final userDataString = prefs.getString('user_data');
+      if (userDataString != null) {
+        _userData = json.decode(userDataString);
+      }
     }
   }
 
@@ -111,12 +135,24 @@ class UserService {
 
   // Limpiar datos al cerrar sesión
   static Future<void> clearUserData() async {
+    try {
+      // Limpiar datos locales directamente
+      _authToken = null;
+      _userData = null;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('auth_token');
+      await prefs.remove('user_data');
+      print('✅ Datos del usuario limpiados');
+    } catch (e) {
+      print('❌ Error al limpiar datos: $e');
+    }
+  }
+
+  // Limpiar solo datos en memoria (sin SharedPreferences)
+  static void clearUserDataInMemory() {
     _authToken = null;
     _userData = null;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
-    await prefs.remove('user_data');
-    print('✅ Datos del usuario limpiados');
+    print('✅ Datos del usuario limpiados de memoria');
   }
 
   // Generar link de invitación para agregar amigos

@@ -21,7 +21,6 @@ import 'package:runinsight/features/home/data/models/weather_response_model.dart
 import 'package:flutter/scheduler.dart' show Ticker, TickerProviderStateMixin;
 import '../../data/services/training_data_service.dart';
 import '../../data/services/training_state_service.dart';
-import 'package:provider/provider.dart';
 import '../../../ranking/presentation/bloc/ranking_bloc.dart';
 import '../../../home/presentation/bloc/home_bloc.dart';
 import '../../../user/data/services/user_service.dart';
@@ -277,10 +276,7 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage>
     });
 
     // Activar el estado global del entrenamiento
-    final trainingState = Provider.of<TrainingStateService>(
-      context,
-      listen: false,
-    );
+    final trainingState = TrainingStateService();
     trainingState.startTraining();
 
     _bloc.add(StartTraining());
@@ -357,13 +353,10 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage>
 
     // Desactivar el estado global del entrenamiento
     try {
-      final trainingState = Provider.of<TrainingStateService>(
-        context,
-        listen: false,
-      );
+      final trainingState = TrainingStateService();
       trainingState.stopTraining();
     } catch (e) {
-      // Ignorar errores si el provider no está disponible
+      print('⚠️ Error al detener TrainingStateService: $e');
     }
 
     // Resetear estado
@@ -670,13 +663,10 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage>
     _bloc.close();
 
     try {
-      final trainingState = Provider.of<TrainingStateService>(
-        context,
-        listen: false,
-      );
+      final trainingState = TrainingStateService();
       trainingState.stopTraining();
     } catch (e) {
-      // Si el provider ya no existe, ignora el error
+      // Si el TrainingStateService ya no está disponible, ignora el error
       debugPrint(
         '⚠️ TrainingStateService ya no está disponible en dispose: $e',
       );
@@ -766,10 +756,7 @@ class _TrainingInProgressPageState extends State<TrainingInProgressPage>
         listener: (context, state) {
           if (state is ActiveTrainingSuccess) {
             // Desactivar el estado global del entrenamiento
-            final trainingState = Provider.of<TrainingStateService>(
-              context,
-              listen: false,
-            );
+            final trainingState = TrainingStateService();
             trainingState.stopTraining();
 
             // Guardar los datos del entrenamiento en el servicio

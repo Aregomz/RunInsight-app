@@ -39,12 +39,13 @@ import 'package:runinsight/features/active_training/data/services/training_state
 import 'package:provider/provider.dart';
 import 'package:runinsight/features/user/presentation/bloc/user_bloc.dart';
 import 'package:runinsight/features/ia_coach/presentation/pages/ia_coach_page.dart';
+import 'package:runinsight/features/auth/data/services/auth_init_service.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/',
-    // Configurar para manejar URLs externas (deep links)
-    redirect: (context, state) {
+    // Configurar para manejar URLs externas (deep links) y autenticación
+    redirect: (context, state) async {
       // Manejar deep links con scheme personalizado
       final location = state.uri.toString();
       if (location.startsWith('runinsight://')) {
@@ -58,6 +59,34 @@ class AppRouter {
           return '/home';
         }
       }
+
+      // Verificar autenticación de forma síncrona para evitar parpadeos
+      final isLoggedIn = UserService.getUserId() != null;
+      final isAuthRoute = state.matchedLocation == '/' || 
+                         state.matchedLocation == '/register' ||
+                         state.matchedLocation.startsWith('/invite/');
+
+      print('🔐 Router - Ruta: ${state.matchedLocation}, Autenticado: $isLoggedIn');
+
+      // Si no está autenticado y no está en una ruta de auth, redirigir a login inmediatamente
+      if (!isLoggedIn && !isAuthRoute) {
+        print('🔐 Router - Redirigiendo a login inmediatamente');
+        return '/';
+      }
+
+      // Si está autenticado y está en la página de bienvenida, redirigir a home
+      if (isLoggedIn && state.matchedLocation == '/') {
+        print('🔐 Router - Redirigiendo a home');
+        return '/home';
+      }
+
+      // Si está en una ruta de auth y está autenticado, permitir la navegación
+      // Esto evita el parpadeo durante el logout
+      if (isAuthRoute && isLoggedIn) {
+        print('🔐 Router - Usuario autenticado en ruta de auth, permitiendo navegación');
+        return null;
+      }
+
       return null;
     },
     routes: [
@@ -77,10 +106,7 @@ class AppRouter {
         },
       ),
       ShellRoute(
-        builder: (_, __, child) => ChangeNotifierProvider(
-          create: (_) => TrainingStateService(),
-          child: AppShell(child: child),
-        ),
+        builder: (_, __, child) => AppShell(child: child),
         routes: [
           GoRoute(
             path: '/home',

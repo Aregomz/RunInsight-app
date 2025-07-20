@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:runinsight/features/profile/presentation/widgets/profile_header.dart';
 import 'package:runinsight/features/user/presentation/bloc/user_bloc.dart';
 import 'package:runinsight/features/user/data/services/user_service.dart';
+import 'package:runinsight/features/auth/data/services/auth_init_service.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -214,12 +215,22 @@ class ProfileView extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () async {
-                    // 1. Navega fuera del árbol de providers (a la pantalla de bienvenida)
-                    context.go('/');
-                    // 2. Espera un frame para asegurar que el árbol se reconstruya
-                    await Future.delayed(const Duration(milliseconds: 100));
-                    // 3. Limpia los datos del usuario
-                    await UserService.clearUserData();
+                    try {
+                      // Limpiar sesión usando AuthInitService
+                      await AuthInitService.logout();
+                      
+                      // Navegar a la pantalla de bienvenida usando pushReplacement para evitar problemas con providers
+                      if (context.mounted) {
+                        context.go('/');
+                      }
+                    } catch (e) {
+                      print('❌ Error al cerrar sesión: $e');
+                      // En caso de error, intentar limpiar manualmente
+                      await UserService.clearUserData();
+                      if (context.mounted) {
+                        context.go('/');
+                      }
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 105, 2, 2),

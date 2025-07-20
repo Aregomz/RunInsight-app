@@ -1,5 +1,6 @@
 import '../services/auth_persistence_service.dart';
 import '../../../user/data/services/user_service.dart';
+import '../../../active_training/data/services/training_state_service.dart';
 
 class AuthInitService {
   /// Inicializa la autenticación al arrancar la app
@@ -72,8 +73,16 @@ class AuthInitService {
       // Limpiar datos de persistencia
       await AuthPersistenceService.clearAuthData();
       
-      // Limpiar UserService
-      await UserService.clearUserData();
+      // Limpiar UserService (solo datos en memoria, no llamar a métodos que puedan crear bucles)
+      UserService.clearUserDataInMemory();
+      
+      // Resetear TrainingStateService para evitar errores de disposición
+      try {
+        TrainingStateService().reset();
+        print('🔄 TrainingStateService reseteado');
+      } catch (e) {
+        print('⚠️ Error al resetear TrainingStateService: $e');
+      }
       
       print('✅ Sesión cerrada correctamente');
     } catch (e) {
