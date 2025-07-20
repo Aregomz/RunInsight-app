@@ -7,6 +7,7 @@ import 'package:runinsight/features/chat_box/data/repositories/chat_repository_i
 import 'package:runinsight/core/services/gemini_api_service.dart';
 import '../bloc/chat_box_bloc.dart';
 import '../widgets/chat_bubble.dart';
+import '../widgets/chat_cleanup_notice.dart';
 import 'package:runinsight/features/user/data/services/user_service.dart';
 
 class ChatScreen extends StatelessWidget {
@@ -126,6 +127,9 @@ class _ChatScreenViewState extends State<_ChatScreenView> {
                 ],
               ),
               const SizedBox(height: 12),
+              // Notificación sutil de limpieza automática
+              const ChatCleanupNotice(),
+              const SizedBox(height: 8),
               Expanded(
                 child: BlocBuilder<ChatBloc, ChatState>(
                   builder: (context, state) {

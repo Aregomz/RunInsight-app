@@ -26,6 +26,7 @@ class ApiEndpoints {
   
   // Chat endpoints
   static const String chat = '/chat';
+  static const String classifyQuestion = '/chatbot/text-mining/classify';
   
   // Events endpoints
   static const String events = '/users/events';

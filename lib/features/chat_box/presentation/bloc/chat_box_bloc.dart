@@ -30,12 +30,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     try {
       print('📤 Enviando mensaje: ${event.message}');
 
-      // Cargar mensajes existentes primero
-      final existingMessages = await repository.loadMessages(userId: userId);
-      print('📥 Mensajes existentes: ${existingMessages.length}');
-
-      // Mostrar estado de carga con mensajes existentes
-      emit(ChatLoading(messages: existingMessages));
+      // Mostrar estado de carga con mensajes actuales
+      emit(ChatLoading(messages: state.messages));
 
       // Obtener respuesta de la IA (esto ya guarda los mensajes en el repositorio)
       final newMessages = await sendMessage(event.message);
@@ -43,16 +39,15 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         '✅ Respuesta de IA recibida, ${newMessages.length} nuevos mensajes',
       );
 
-      // Cargar todos los mensajes actualizados desde el almacenamiento
+      // Cargar mensajes actualizados solo una vez (optimizado)
       final allMessages = await repository.loadMessages(userId: userId);
       print('📥 BLoC actualizado con ${allMessages.length} mensajes total');
 
       emit(ChatLoaded(messages: allMessages));
     } catch (e) {
       print('❌ Error en BLoC: $e');
-      // En caso de error, mantener los mensajes existentes
-      final existingMessages = await repository.loadMessages(userId: userId);
-      emit(ChatLoaded(messages: existingMessages));
+      // En caso de error, mantener los mensajes actuales
+      emit(ChatLoaded(messages: state.messages));
     }
   }
 
@@ -63,28 +58,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     try {
       print('🔄 BLoC: Cargando historial...');
 
-      // Intentar cargar mensajes múltiples veces si es necesario
-      List<ChatMessage> messages = [];
-      int attempts = 0;
-      const maxAttempts = 3;
-
-      while (attempts < maxAttempts) {
-        try {
-          messages = await repository.loadMessages(userId: userId);
-          print(
-            '✅ BLoC: Historial cargado con ${messages.length} mensajes (intento ${attempts + 1})',
-          );
-          break;
-        } catch (e) {
-          attempts++;
-          print('⚠️ BLoC: Intento ${attempts} falló: $e');
-          if (attempts >= maxAttempts) {
-            print('❌ BLoC: Todos los intentos fallaron');
-            throw e;
-          }
-          await Future.delayed(Duration(milliseconds: 100 * attempts));
-        }
-      }
+      // Cargar mensajes una sola vez
+      final messages = await repository.loadMessages(userId: userId);
+      print('✅ BLoC: Historial cargado con ${messages.length} mensajes');
 
       emit(ChatLoaded(messages: messages));
     } catch (e) {

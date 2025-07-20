@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import '../../domain/entities/event.dart';
 
 class EventPopupDialog extends StatefulWidget {
-  final Event event;
+  final List<String> images;
   final VoidCallback onDismiss;
 
   const EventPopupDialog({
     super.key,
-    required this.event,
+    required this.images,
     required this.onDismiss,
   });
 
@@ -22,6 +21,10 @@ class _EventPopupDialogState extends State<EventPopupDialog>
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
   late Animation<double> _buttonScaleAnimation;
+  late final PageController _pageController;
+  int _currentPage = 0;
+
+  List<String> get images => widget.images;
 
   @override
   void initState() {
@@ -45,11 +48,18 @@ class _EventPopupDialogState extends State<EventPopupDialog>
       CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.3, curve: Curves.easeOutBack)),
     );
     _controller.forward();
+    _pageController = PageController();
+    // LOG: Imprimir imágenes al abrir el popup
+    print('[EVENT POPUP] Lista de imágenes recibidas:');
+    for (var i = 0; i < images.length; i++) {
+      print('  [$i]: ${images[i]}');
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -61,6 +71,8 @@ class _EventPopupDialogState extends State<EventPopupDialog>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    // LOG: Imprimir imagen actual cada vez que se construye
+    print('[EVENT POPUP] Imagen actual (index $_currentPage): ${images[_currentPage]}');
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 32),
@@ -112,7 +124,7 @@ class _EventPopupDialogState extends State<EventPopupDialog>
                   ),
                 ),
               ),
-              // Imagen de fondo difuminada + gradiente overlay
+              // Imagen de fondo difuminada + gradiente overlay (de la imagen actual)
               Positioned.fill(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(36),
@@ -120,7 +132,7 @@ class _EventPopupDialogState extends State<EventPopupDialog>
                     fit: StackFit.expand,
                     children: [
                       Image.network(
-                        widget.event.imgPath,
+                        images[_currentPage],
                         fit: BoxFit.cover,
                         color: Colors.black.withOpacity(0.22),
                         colorBlendMode: BlendMode.darken,
@@ -175,59 +187,108 @@ class _EventPopupDialogState extends State<EventPopupDialog>
                   ),
                 ),
               ),
-              // Imagen principal en contain (siempre completa)
+              // Carrusel de imágenes
               Center(
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween<double>(begin: 0.95, end: 1.0),
-                  duration: const Duration(milliseconds: 600),
-                  curve: Curves.easeOutExpo,
-                  builder: (context, value, child) {
-                    return Transform.scale(
-                      scale: value,
-                      child: child,
-                    );
-                  },
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(28),
-                    child: Container(
-                      color: Colors.black.withOpacity(0.10),
-                      width: size.width * 0.85,
-                      height: size.height * 0.60,
-                      child: Image.network(
-                        widget.event.imgPath,
-                        fit: BoxFit.contain,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            color: Colors.grey[800],
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
-                                    : null,
-                                color: Colors.orangeAccent,
-                              ),
-                            ),
+                child: SizedBox(
+                  width: size.width * 0.85,
+                  height: size.height * 0.60,
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: images.length,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentPage = index;
+                        // LOG: Imprimir imagen al cambiar de página
+                        print('[EVENT POPUP] Imagen cambiada a (index $_currentPage): ${images[_currentPage]}');
+                      });
+                    },
+                    itemBuilder: (context, index) {
+                      return TweenAnimationBuilder<double>(
+                        tween: Tween<double>(begin: 0.95, end: 1.0),
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.easeOutExpo,
+                        builder: (context, value, child) {
+                          return Transform.scale(
+                            scale: value,
+                            child: child,
                           );
                         },
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[800],
-                            child: const Center(
-                              child: Icon(
-                                Icons.error_outline,
-                                color: Colors.white,
-                                size: 50,
-                              ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(28),
+                          child: Container(
+                            color: Colors.black.withOpacity(0.10),
+                            child: Image.network(
+                              images[index],
+                              fit: BoxFit.contain,
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                  color: Colors.grey[800],
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      value: loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress.cumulativeBytesLoaded /
+                                              loadingProgress.expectedTotalBytes!
+                                          : null,
+                                      color: Colors.orangeAccent,
+                                    ),
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.grey[800],
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.error_outline,
+                                      color: Colors.white,
+                                      size: 50,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                    ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
+              // Indicadores de página (dots)
+              if (images.length > 1)
+                Positioned(
+                  bottom: 40,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(images.length, (index) {
+                      final isActive = index == _currentPage;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.symmetric(horizontal: 5),
+                        width: isActive ? 18 : 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? Colors.orangeAccent
+                              : Colors.white.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: isActive
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.orangeAccent.withOpacity(0.4),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  ),
+                                ]
+                              : [],
+                        ),
+                      );
+                    }),
+                  ),
+                ),
               // Botón de cerrar con animación
               Positioned(
                 top: 16,

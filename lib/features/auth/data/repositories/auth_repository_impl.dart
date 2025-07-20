@@ -3,6 +3,7 @@ import '../../domain/entities/user_entity.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../models/register_request_model.dart';
 import '../models/auth_response_model.dart';
+import '../services/auth_persistence_service.dart';
 import '../../../user/data/services/user_service.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -16,11 +17,14 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final response = await _remoteDataSource.login(email, password);
       
+      // Guardar datos de autenticación de manera persistente
+      await AuthPersistenceService.saveAuthData(response);
+      
+      // También mantener compatibilidad con UserService
       final token = response.user?.token ?? response.token ?? response.accessToken;
       final userData = response.user;
       
       if (token != null) {
-        // Guardar el token en UserService
         final userInfo = {
           'id': userData?.id,
           'token': token,
@@ -29,7 +33,7 @@ class AuthRepositoryImpl implements AuthRepository {
         
         UserService.setAuthToken(token, userInfo);
         print('✅ Login exitoso para: ${userData?.email ?? email}');
-        print('🔑 Token guardado en UserService: $token');
+        print('🔑 Token guardado persistentemente: $token');
       } else {
         throw Exception('No se recibió token de autenticación');
       }

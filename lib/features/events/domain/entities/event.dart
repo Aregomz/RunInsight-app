@@ -28,4 +28,7 @@ class Event {
     final today = DateTime(now.year, now.month, now.day);
     return eventDate.isAtSameMomentAs(today);
   }
+
+  // Getter para lista de imágenes (por defecto solo imgPath)
+  List<String> get imgPaths => [imgPath];
 } 

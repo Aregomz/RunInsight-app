@@ -21,6 +21,10 @@ import '../../features/ia_coach/data/repositories/ia_coach_repository_impl.dart'
 import '../../features/ia_coach/domain/usecases/get_ia_predictions_usecase.dart';
 import '../../features/ia_coach/presentation/bloc/ia_coach_bloc.dart';
 import '../../core/services/gemini_api_service.dart';
+import '../../features/chat_box/data/datasources/chat_remote_datasource.dart';
+import '../../features/chat_box/data/repositories/question_classification_repository_impl.dart';
+import '../../features/chat_box/domain/repositories/question_classification_repository.dart';
+import '../../features/chat_box/domain/usecases/classify_question_usecase.dart';
 
 class DependencyInjection {
   static void init() {
@@ -127,5 +131,20 @@ class DependencyInjection {
 
   static IaCoachBloc getIaCoachBloc() {
     return IaCoachBloc(getPredictions: getIaPredictionsUseCase());
+  }
+
+  // Chat Question Classification dependencies
+  static ChatRemoteDataSource getChatRemoteDataSource() {
+    return ChatRemoteDataSource();
+  }
+
+  static QuestionClassificationRepository getQuestionClassificationRepository() {
+    return QuestionClassificationRepositoryImpl(
+      remoteDataSource: getChatRemoteDataSource(),
+    );
+  }
+
+  static ClassifyQuestionUseCase getClassifyQuestionUseCase() {
+    return ClassifyQuestionUseCase(getQuestionClassificationRepository());
   }
 } 

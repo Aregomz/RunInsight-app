@@ -54,11 +54,22 @@ class _EventsHandlerState extends State<EventsHandler> {
   }
 
   void _showEventDialog(Event event) {
+    // Agrupa todas las imágenes de eventos con el mismo año, mes y día (ignorando la hora)
+    final events = context.read<EventsBloc>().state is EventsLoaded
+        ? (context.read<EventsBloc>().state as EventsLoaded).events
+        : <Event>[];
+    final images = events
+        .where((e) =>
+            e.dateEvent.year == event.dateEvent.year &&
+            e.dateEvent.month == event.dateEvent.month &&
+            e.dateEvent.day == event.dateEvent.day)
+        .map((e) => e.imgPath)
+        .toList();
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => EventPopupDialog(
-        event: event,
+        images: images,
         onDismiss: () {
           // Cerrar el diálogo
           Navigator.of(context).pop();

@@ -3,24 +3,36 @@ import 'package:runinsight/features/chat_box/domain/entities/chat_message.dart';
 import 'package:runinsight/features/chat_box/domain/repositories/chat_repository.dart';
 import 'package:runinsight/core/services/gemini_api_service.dart';
 import '../datasources/chat_local_datasource.dart';
+import '../repositories/question_classification_repository_impl.dart';
+import '../services/chat_cleanup_service.dart';
 
 class ChatRepositoryImpl implements ChatRepository {
   final GeminiApiService geminiApiService;
   final int userId;
   late final ChatStorageService _storageService;
+  late final QuestionClassificationRepositoryImpl _classificationRepository;
 
   ChatRepositoryImpl({required this.geminiApiService, required this.userId}) {
     _storageService = ChatStorageService(userId);
+    _classificationRepository = QuestionClassificationRepositoryImpl();
   }
 
   @override
   Future<List<ChatMessage>> sendMessage(String message) async {
     try {
-      // Cargar mensajes existentes
-      final existingMessages = await _storageService.loadMessages();
-      print(
-        '📥 Mensajes existentes en repositorio:  [90m${existingMessages.length} [0m',
-      );
+      // Verificar si debe limpiar el historial automáticamente
+      await _checkAndPerformCleanup();
+      
+      // Enviar pregunta al backend para clasificación automática
+      print('🚀🚀🚀 INICIANDO CLASIFICACIÓN PARA: "$message" 🚀🚀🚀');
+      print('🔍 Enviando pregunta al backend para clasificación...');
+      print('💬 Mensaje original: "$message"');
+      print('⏰ Timestamp: ${DateTime.now().toIso8601String()}');
+      
+      final classification = await _classificationRepository.classifyQuestion(message);
+      print('📊 Backend clasificó la pregunta como: ${classification.category ?? "sin clasificar"}');
+      print('🔗 Integración completada exitosamente');
+      print('✅✅✅ CLASIFICACIÓN COMPLETADA PARA: "$message" ✅✅✅');
 
       // Crear mensaje del usuario
       final userMessage = ChatMessage(
@@ -30,33 +42,40 @@ class ChatRepositoryImpl implements ChatRepository {
         timestamp: DateTime.now(),
       );
 
-      // Guardar mensaje del usuario inmediatamente
-      final messagesWithUser = [...existingMessages, userMessage];
-      await _storageService.saveMessages(messagesWithUser);
+      // Agregar mensaje del usuario sin cargar todos los mensajes
+      await _storageService.addMessage(userMessage);
       print('💾 Mensaje del usuario guardado');
 
-      // Determinar si es la primera vez que el usuario escribe
-      final isFirstMessage = existingMessages.isEmpty;
+      // Cargar solo los últimos 4 mensajes para el contexto (más eficiente)
+      final recentMessages = await _storageService.loadMessages();
+      final isFirstMessage = recentMessages.length <= 1; // Solo el mensaje que acabamos de agregar
       print('🎯 Es primera vez: $isFirstMessage');
 
       // Generar respuesta usando Gemini con contexto
       print('🔄 Repositorio: Llamando a Gemini...');
       String aiResponse;
 
+      // Incluir la categoría en el contexto si está disponible
+      final categoryContext = classification.category != null 
+          ? '\nCategoría de la pregunta: ${classification.category}'
+          : '';
+      
+      print('🏷️ Contexto de categoría agregado: ${categoryContext.isNotEmpty ? categoryContext : "ninguno"}');
+
       if (isFirstMessage) {
         // Para el primer mensaje, dar bienvenida personalizada
-        aiResponse = await geminiApiService.generateResponse(
-          'Primera vez: $message',
-        );
+        final prompt = 'Primera vez: $message$categoryContext';
+        print('🤖 Prompt para Gemini (primera vez): $prompt');
+        aiResponse = await geminiApiService.generateResponse(prompt);
       } else {
-        // Para mensajes posteriores, incluir contexto de la conversación
-        final recentMessages = existingMessages
-            .skip(existingMessages.length > 4 ? existingMessages.length - 4 : 0)
+        // Para mensajes posteriores, incluir contexto de la conversación (solo últimos 4)
+        final contextMessages = recentMessages
+            .skip(recentMessages.length > 4 ? recentMessages.length - 4 : 0)
             .map((m) => '${m.isUser ? "Usuario" : "Coach"}: ${m.content}')
             .join('\n');
-        aiResponse = await geminiApiService.generateResponse(
-          'Contexto anterior:\n$recentMessages\n\nNuevo mensaje: $message',
-        );
+        final prompt = 'Contexto anterior:\n$contextMessages\n\nNuevo mensaje: $message$categoryContext';
+        print('🤖 Prompt para Gemini (con contexto): $prompt');
+        aiResponse = await geminiApiService.generateResponse(prompt);
       }
 
       print('✅ Repositorio: Respuesta de Gemini recibida');
@@ -69,10 +88,9 @@ class ChatRepositoryImpl implements ChatRepository {
         timestamp: DateTime.now(),
       );
 
-      // Agregar mensaje de la IA y guardar todo
-      final allMessages = [...messagesWithUser, aiMessage];
-      await _storageService.saveMessages(allMessages);
-      print('💾 Guardados ${allMessages.length} mensajes total');
+      // Agregar mensaje de la IA
+      await _storageService.addMessage(aiMessage);
+      print('💾 Mensaje de IA guardado');
 
       return [userMessage, aiMessage];
     } catch (e) {
@@ -116,6 +134,21 @@ class ChatRepositoryImpl implements ChatRepository {
     }
   }
 
+  // Cargar solo los últimos N mensajes (más eficiente)
+  Future<List<ChatMessage>> loadRecentMessages({int? userId, int limit = 10}) async {
+    try {
+      final allMessages = await _storageService.loadMessages();
+      final recentMessages = allMessages.length > limit 
+          ? allMessages.skip(allMessages.length - limit).toList()
+          : allMessages;
+      print('🔄 Repositorio cargó  [90m${recentMessages.length} [0m mensajes recientes (de ${allMessages.length} total)');
+      return recentMessages;
+    } catch (e) {
+      print('❌ Error en repositorio al cargar mensajes recientes: $e');
+      return [];
+    }
+  }
+
   // Limpiar historial de chat
   Future<void> clearChat({int? userId}) async {
     await _storageService.clearMessages();
@@ -124,5 +157,24 @@ class ChatRepositoryImpl implements ChatRepository {
   // Método de debug para verificar almacenamiento
   Future<void> debugStorage({int? userId}) async {
     await _storageService.debugStorage();
+  }
+  
+  /// Verifica y ejecuta la limpieza automática si es necesario
+  Future<void> _checkAndPerformCleanup() async {
+    try {
+      final isEnabled = await ChatCleanupService.isCleanupEnabled();
+      if (!isEnabled) {
+        print('🔧 Limpieza automática deshabilitada');
+        return;
+      }
+      
+      final shouldCleanup = await ChatCleanupService.shouldCleanup();
+      if (shouldCleanup) {
+        print('🧹 Ejecutando limpieza automática del historial...');
+        await ChatCleanupService.performCleanup(userId);
+      }
+    } catch (e) {
+      print('❌ Error al verificar limpieza automática: $e');
+    }
   }
 }
