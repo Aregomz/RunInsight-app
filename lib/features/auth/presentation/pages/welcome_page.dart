@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runinsight/features/auth/presentation/widgets/gradient_button.dart';
 import '../widgets/login_modal.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -13,6 +14,30 @@ class WelcomePage extends StatefulWidget {
 
 class _WelcomePageState extends State<WelcomePage> {
   bool showLoginModal = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkSessionExpired();
+  }
+
+  Future<void> _checkSessionExpired() async {
+    final prefs = await SharedPreferences.getInstance();
+    final expired = prefs.getBool('session_expired') ?? false;
+    if (expired) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      });
+      await prefs.remove('session_expired');
+    }
+  }
 
   void _showLogin() {
     setState(() => showLoginModal = true);

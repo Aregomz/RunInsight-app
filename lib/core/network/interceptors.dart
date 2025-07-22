@@ -1,5 +1,8 @@
 import 'package:dio/dio.dart';
 import '../../../features/user/data/services/user_service.dart';
+import '../../../features/auth/data/services/auth_init_service.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class AuthInterceptor extends Interceptor {
   @override
@@ -39,11 +42,17 @@ class AuthInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
     print('❌ [ERROR] ${err.response?.statusCode} ${err.requestOptions.path}');
     print('❌ [MESSAGE] ${err.message}');
     print('❌ [RESPONSE] ${err.response?.data}');
-    
+
+    final status = err.response?.statusCode;
+    if (status == 401 || status == 403) {
+      print('🔒 Token inválido o expirado. Cerrando sesión automáticamente.');
+      await AuthInitService.logout(expired: true);
+      // La redirección al login se maneja en el router/UI.
+    }
     handler.next(err);
   }
 }

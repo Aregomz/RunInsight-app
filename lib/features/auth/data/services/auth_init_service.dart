@@ -1,6 +1,7 @@
 import '../services/auth_persistence_service.dart';
 import '../../../user/data/services/user_service.dart';
 import '../../../active_training/data/services/training_state_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthInitService {
   /// Inicializa la autenticación al arrancar la app
@@ -66,7 +67,7 @@ class AuthInitService {
   }
   
   /// Limpia la sesión (logout)
-  static Future<void> logout() async {
+  static Future<void> logout({bool expired = false}) async {
     try {
       print('🚪 Cerrando sesión...');
       
@@ -82,6 +83,12 @@ class AuthInitService {
         print('🔄 TrainingStateService reseteado');
       } catch (e) {
         print('⚠️ Error al resetear TrainingStateService: $e');
+      }
+      
+      // Guardar flag de sesión expirada si aplica
+      if (expired) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('session_expired', true);
       }
       
       print('✅ Sesión cerrada correctamente');
